@@ -16,6 +16,10 @@ Ordinary smart contracts can verify identities, balances, timestamps and hashes,
 
 - Contract: `0xc7A6812642ea6158926B369f6c0d35F507fbAA8a`
 - Deployment transaction: `0xf38aa4cf30da510c5eff61b13fdc8eef9e33fe34281f2dbe599b99ec94c88c5c`
+- Network: GenLayer Studionet
+- Chain ID: `61999`
+- RPC: `https://studio.genlayer.com/api`
+- Explorer: `https://explorer-studio.genlayer.com`
 
 Older AgentSLA deployments were debugging iterations and are not canonical.
 
@@ -51,6 +55,53 @@ GenLayer returned `SATISFIED` with a score of `95`. The adjudication found that 
 
 The contract retrieves the public artifacts during consensus review and verifies their exact SHA-256 digests before using them as adjudication input.
 
+## Frontend DApp
+
+The repository includes a lightweight production frontend in `frontend/`.
+
+Features:
+
+- polished responsive AgentSLA dashboard;
+- canonical `95/100 SATISFIED` proof view;
+- live `get_result` read against the deployed contract;
+- MetaMask / EIP-1193 wallet connection;
+- automatic Studionet network add/switch;
+- browser actions for `create_sla`, `accept_sla`, `submit_work`, `review_sla`, and `finalize_sla`;
+- GenLayer fee estimation before writes;
+- finalization tracking with explicit transaction-success checks;
+- direct links to the canonical contract, consensus transaction and settlement transaction.
+
+### Run locally
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### Production build
+
+```bash
+cd frontend
+npm install
+npm run build
+```
+
+The frontend uses `genlayer-js` with the official Studionet chain definition. The DApp has no backend or database; the Intelligent Contract is the source of truth.
+
+## Netlify deployment
+
+`netlify.toml` is included at the repository root.
+
+For a Git-connected Netlify deployment, use the repository as-is. Netlify will:
+
+- build from `frontend/`;
+- run `npm install && npm run build`;
+- publish `frontend/dist`;
+- use Node.js 22.
+
+No application secrets are required for the canonical public demo.
+
 ## Contract methods
 
 ### Writes
@@ -73,12 +124,15 @@ The contract retrieves the public artifacts during consensus review and verifies
 
 ## Project files
 
-- `agentsla.py` — GenLayer Intelligent Contract source
+- `agentsla.py` — canonical GenLayer Intelligent Contract source
+- `frontend/` — wallet-connected AgentSLA DApp
 - `report.json` — canonical provider demo deliverable
 - `EVIDENCE.md` — source/evidence map for the demo report
 - `DEPLOYMENT.md` — canonical deployment and lifecycle record
 - `SUBMISSION_EVIDENCE.md` — reviewer-facing proof trail
+- `PROJECT_SUBMISSION.md` — copy-ready project submission package
+- `netlify.toml` — production hosting configuration
 
 ## Status
 
-**End-to-end Studionet demo completed successfully.** The provider explicitly accepted immutable terms, submitted hash-bound work and evidence, GenLayer Full Consensus returned `SATISFIED` at `95/100`, and the escrow was finalized to the provider.
+**End-to-end Studionet demo completed successfully.** The provider explicitly accepted immutable terms, submitted hash-bound work and evidence, GenLayer Full Consensus returned `SATISFIED` at `95/100`, and the escrow was finalized to the provider. The repository also contains the wallet-connected frontend and deployment configuration needed to present the project as a complete DApp.

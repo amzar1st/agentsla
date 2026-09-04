@@ -1,5 +1,5 @@
 import './styles.css';
-import { createClient, isSuccessful } from 'genlayer-js';
+import { createClient } from 'genlayer-js';
 import { studionet } from 'genlayer-js/chains';
 import { TransactionHashVariant } from 'genlayer-js/types';
 
@@ -208,7 +208,7 @@ async function submitWrite(call, label) {
 
     const transaction = await walletClient.waitForFinalization({ hash: txId });
 
-    if (!isSuccessful(transaction)) {
+    if (transaction?.txExecutionResultName !== 'FINISHED_WITH_RETURN') {
       const statusName = transaction?.statusName || 'unknown status';
       const executionName = transaction?.txExecutionResultName || 'unknown execution result';
       throw new Error(`${statusName} / ${executionName}`);

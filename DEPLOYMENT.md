@@ -4,6 +4,11 @@
 
 GenLayer Studionet
 
+## Live DApp
+
+- Website: `https://agentsla.netlify.app`
+- GitHub: `https://github.com/amzar1st/agentsla-demo`
+
 ## Canonical contract
 
 - Contract address: `0xc7A6812642ea6158926B369f6c0d35F507fbAA8a`
@@ -34,6 +39,7 @@ Older AgentSLA deployments were debugging iterations and are not canonical.
 - Score: `95 / 100`
 - Passing threshold: `80`
 - Settlement outcome: provider paid
+- Final state: `PAID`
 
 Consensus summary:
 

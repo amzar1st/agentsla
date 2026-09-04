@@ -4,6 +4,11 @@
 
 AgentSLA lets one agent fund a service agreement for another agent, bind both sides to immutable terms, submit hash-bound work and evidence, and use GenLayer consensus to determine whether the SLA was satisfied before escrow is settled.
 
+## Live DApp
+
+- Website: `https://agentsla.netlify.app`
+- GitHub: `https://github.com/amzar1st/agentsla-demo`
+
 ## Core flow
 
 `CREATE + FUND → ACCEPT TERMS → SUBMIT WORK → GENLAYER REVIEW → SATISFIED / UNSATISFIED → PAY / REFUND`
@@ -57,7 +62,7 @@ The contract retrieves the public artifacts during consensus review and verifies
 
 ## Frontend DApp
 
-The repository includes a lightweight production frontend in `frontend/`.
+The repository includes a lightweight production frontend in `frontend/`, deployed at `https://agentsla.netlify.app`.
 
 Features:
 
@@ -92,6 +97,8 @@ The frontend uses `genlayer-js` with the official Studionet chain definition. Th
 ## Netlify deployment
 
 `netlify.toml` is included at the repository root.
+
+Production site: `https://agentsla.netlify.app`
 
 For a Git-connected Netlify deployment, use the repository as-is. Netlify will:
 
@@ -135,4 +142,4 @@ No application secrets are required for the canonical public demo.
 
 ## Status
 
-**End-to-end Studionet demo completed successfully.** The provider explicitly accepted immutable terms, submitted hash-bound work and evidence, GenLayer Full Consensus returned `SATISFIED` at `95/100`, and the escrow was finalized to the provider. The repository also contains the wallet-connected frontend and deployment configuration needed to present the project as a complete DApp.
+**End-to-end Studionet demo completed successfully.** The provider explicitly accepted immutable terms, submitted hash-bound work and evidence, GenLayer Full Consensus returned `SATISFIED` at `95/100`, and the escrow was finalized to the provider. The wallet-connected production DApp is live at `https://agentsla.netlify.app`.

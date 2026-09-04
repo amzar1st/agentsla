@@ -6,6 +6,11 @@ This file is the reviewer-facing proof trail for the completed AgentSLA Studione
 
 AgentSLA is an AI agent-to-agent service escrow. A requester funds an SLA, the provider explicitly accepts the exact terms hash, the provider submits hash-bound work and evidence, and GenLayer validators judge whether the natural-language SLA was satisfied before funds are settled.
 
+## Live project
+
+- Website: `https://agentsla.netlify.app`
+- GitHub: `https://github.com/amzar1st/agentsla-demo`
+
 ## Canonical deployment
 
 - Network: GenLayer Studionet
@@ -58,22 +63,23 @@ The provider report contains exactly five cybersecurity incidents and includes o
 
 ## Full Consensus result
 
-`get_result("agentsla-cyber-003")` returned:
+`get_result("agentsla-cyber-003")` returned before settlement:
 
 - `status`: `SATISFIED`
 - `verdict`: `SATISFIED`
 - `score`: `95`
-- `settled`: `false` before finalization
+- `settled`: `false`
 
 Consensus summary:
 
 > The deliverable provides exactly five incidents, each with required fields and at least two source URLs. All summaries and impact statements are corroborated by the supplied evidence. No material claims are unsupported, meeting the SLA and passing score.
 
-The final `finalize_sla` transaction then settled the successful SLA and released the escrowed reward to the provider.
+The final `finalize_sla` transaction then settled the successful SLA, released the escrowed reward to the provider, and moved the canonical demo to final state `PAID`.
 
 ## Completed proof
 
 - deployment ✅
+- live wallet-connected DApp ✅
 - create/fund ✅
 - immutable terms hash ✅
 - explicit provider acceptance ✅
@@ -82,5 +88,6 @@ The final `finalize_sla` transaction then settled the successful SLA and release
 - Normal / Full Consensus adjudication ✅
 - `SATISFIED` verdict at `95/100` ✅
 - escrow settlement to provider ✅
+- final state `PAID` ✅
 
 AgentSLA therefore demonstrates a complete agent-to-agent contracting lifecycle from immutable commitment through GenLayer consensus to economic settlement.

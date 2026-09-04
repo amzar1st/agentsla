@@ -25,7 +25,7 @@ VERDICT_UNSATISFIED = "UNSATISFIED"
 MIN_WINDOW = 60
 MAX_ACCEPTANCE_WINDOW = 30 * 24 * 60 * 60
 MAX_SUBMISSION_WINDOW = 90 * 24 * 60 * 60
-REVIEW_TIMEOUT = 14 * 24 * 60 * 60
+REVIEW_TIMEOUT = 24 * 60 * 60
 
 MAX_ARTIFACT_BYTES = 120000
 MAX_URL_CHARS = 700
@@ -197,12 +197,13 @@ class AgentSLA(gl.Contract):
             }
 
         def fetch_artifact(url: str, expected_hash: str) -> typing.Any:
-            response = gl.nondet.web.get(url)
-
-            if response.status_code >= 400:
+            # gl.nondet.web.get() in the pinned runner reliably exposes body.
+            # Do not assume a requests-style status_code attribute exists.
+            try:
+                response = gl.nondet.web.get(url)
+                body = response.body
+            except Exception:
                 return {"available": False, "hash_ok": False, "text": ""}
-
-            body = response.body
 
             # Bound what enters the LLM prompt while hashing the exact full body.
             digest = hashlib.sha256(body).hexdigest()

@@ -1,0 +1,62 @@
+{
+  "sla_id": "agentsla-cyber-001",
+  "report_title": "Five Major Cybersecurity Incidents Publicly Announced Between 2026-08-24 and 2026-09-03",
+  "generated_for": "AgentSLA demo",
+  "incidents": [
+    {
+      "organization": "Boston Scientific Corporation",
+      "announcement_date": "2026-08-26",
+      "incident_date": "2026-08-25",
+      "summary": "Boston Scientific disclosed a cybersecurity incident affecting certain information technology systems. The company said the incident caused a network outage and disrupted global operations, and it activated incident-response protocols with third-party cybersecurity experts.",
+      "reported_impact": "Disruption and limited access to information systems and business applications, including systems supporting processing and shipping customer orders. Later company updates also described impacts to manufacturing-related systems and certain remote-monitoring workflows while restoration was underway.",
+      "sources": [
+        "https://www.sec.gov/Archives/edgar/data/885725/000088572526000056/bsx-20260826.htm",
+        "https://news.bostonscientific.com/update-on-recent-cybersecurity-incident"
+      ]
+    },
+    {
+      "organization": "U.S. Bureau of Alcohol, Tobacco, Firearms and Explosives (ATF)",
+      "announcement_date": "2026-08-26",
+      "incident_date": null,
+      "summary": "ATF confirmed a cybersecurity incident involving a legacy standalone system containing information related to investigative matters. The affected system was separate from ATF's main operational systems.",
+      "reported_impact": "ATF said the affected standalone system was disconnected and that its enterprise network, eForms, and other operational systems were not impacted. Subsequent ATF updates addressed claims that material from the standalone CALEA system had been published.",
+      "sources": [
+        "https://www.atf.gov/news/press-releases/atf-update-cybersecurity-incident",
+        "https://www.reuters.com/legal/government/us-federal-agency-confirms-data-breach-wake-claims-by-ransomware-group-2026-08-27/"
+      ]
+    },
+    {
+      "organization": "State of Berlin",
+      "announcement_date": "2026-08-28",
+      "incident_date": null,
+      "summary": "Berlin authorities publicly addressed an extortion attempt following an ICT incident affecting the Berlin state network. Officials said forensic investigation had identified additional data exfiltration in the area of the Senate Department for Mobility, Transport, Climate Protection and the Environment.",
+      "reported_impact": "Berlin confirmed data exfiltration connected with the state-network incident and said law-enforcement and security authorities were investigating. Reuters reported that the Rhysida ransomware group claimed theft of 5.79 TB of data; that volume remains an attacker claim rather than an independently verified official count.",
+      "sources": [
+        "https://www.berlin.de/rbmskzl/aktuelles/pressemitteilungen/2026/pressemitteilung.1708208.php",
+        "https://www.reuters.com/world/berlin-city-government-says-it-wont-submit-extortion-after-pre-election-2026-08-28/"
+      ]
+    },
+    {
+      "organization": "McKesson Corporation",
+      "announcement_date": "2026-08-28",
+      "incident_date": "2026-08-25",
+      "summary": "McKesson disclosed that it discovered a cybersecurity incident affecting its information systems. Subsequent company information confirmed unauthorized access to certain third-party applications and exfiltration of data associated with a subset of customers in specific business units.",
+      "reported_impact": "McKesson reported intermittent service degradation and confirmed data exfiltration associated with a subset of customers in its Oncology & Multispecialty and Medical-Surgical business units. Public reporting also described extortion claims, but unverified attacker record-count claims are not treated as confirmed facts in this report.",
+      "sources": [
+        "https://www.sec.gov/Archives/edgar/data/927653/000092765326000247/mck-20260825.htm",
+        "https://therecord.media/mckesson-cyberattack-ransomware-pharma"
+      ]
+    },
+    {
+      "organization": "Thomson Reuters / C-Track case management platform",
+      "announcement_date": "2026-09-02",
+      "incident_date": "2026-03 (unauthorized file access identified during investigation; exact day not publicly specified)",
+      "summary": "Thomson Reuters disclosed a cybersecurity incident involving the C-Track case management platform. The company detected unauthorized activity on June 30 and later determined that an unauthorized party had obtained certain C-Track files earlier in the year.",
+      "reported_impact": "The incident affected C-Track data used by court systems in multiple U.S. jurisdictions, the U.S. Virgin Islands and Canada. Ontario's courts stated that some Ontario court information was among the accessed data. Thomson Reuters said the platform remained operational while containment, investigation and customer notification proceeded.",
+      "sources": [
+        "https://www.reuters.com/legal/litigation/thomson-reuters-detects-cybersecurity-incident-says-unauthorized-party-accessed-2026-09-03/",
+        "https://www.ontariocourts.ca/en/public-statement-cybersecurity.htm"
+      ]
+    }
+  ]
+}

@@ -11,6 +11,7 @@ AgentSLA is a GenLayer service-settlement protocol for autonomous agents. A requ
 ## Canonical links
 
 - GitHub: `https://github.com/amzar1st/agentsla-demo`
+- Live website: `https://agentsla.netlify.app`
 - Contract: `https://explorer-studio.genlayer.com/contracts/0xc7A6812642ea6158926B369f6c0d35F507fbAA8a`
 - Deployment tx: `https://explorer-studio.genlayer.com/tx/0xf38aa4cf30da510c5eff61b13fdc8eef9e33fe34281f2dbe599b99ec94c88c5c`
 - Full Consensus review tx: `https://explorer-studio.genlayer.com/tx/0x58da7437a475bacfe4d35985c4e483714ba02b095442dfe612d8bd8a44a827d0`
@@ -18,7 +19,6 @@ AgentSLA is a GenLayer service-settlement protocol for autonomous agents. A requ
 - Deliverable: `https://raw.githubusercontent.com/amzar1st/agentsla-demo/main/report.json`
 - Evidence: `https://raw.githubusercontent.com/amzar1st/agentsla-demo/main/EVIDENCE.md`
 - Reviewer proof trail: `https://github.com/amzar1st/agentsla-demo/blob/main/SUBMISSION_EVIDENCE.md`
-- Live website: add the Netlify URL after deployment.
 
 ## Canonical demo result
 

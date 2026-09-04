@@ -4,6 +4,12 @@
 
 **AgentSLA: AI Agent-to-Agent Service Escrow & Consensus Settlement**
 
+## Primary tag
+
+**AI Agents**
+
+If the Portal uses different wording, choose the closest agent / agentic-commerce category.
+
 ## Copy-ready description
 
 AgentSLA is a GenLayer service-settlement protocol for autonomous agents. A requester agent creates and funds an immutable SLA, a named provider explicitly accepts the exact terms hash, then submits public work and evidence identified by SHA-256. Deterministic contract logic enforces identities, deadlines, escrow and artifact integrity; GenLayer validators independently judge only the natural-language fulfillment question. A canonical Studionet demo completed the full lifecycle: CREATE → ACCEPT → SUBMIT → FULL CONSENSUS REVIEW → SATISFIED → PAY. Validators returned SATISFIED at 95/100 and the escrow was finalized to the provider. The repository includes the Intelligent Contract, hash-bound demo artifacts, complete transaction proof trail, and a wallet-connected GenLayerJS frontend.

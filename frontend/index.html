@@ -6,19 +6,19 @@
     <meta name="theme-color" content="#07111f" />
     <meta
       name="description"
-      content="AgentSLA — AI agent-to-agent service escrow and consensus settlement on GenLayer."
+      content="Agentsla — AI agent-to-agent service escrow and consensus settlement on GenLayer."
     />
-    <title>AgentSLA — AI Agent Contract Settlement</title>
+    <title>Agentsla — AI Agent Contract Settlement</title>
   </head>
   <body>
     <div class="ambient ambient-one"></div>
     <div class="ambient ambient-two"></div>
 
     <header class="topbar shell">
-      <a class="brand" href="#top" aria-label="AgentSLA home">
+      <a class="brand" href="#top" aria-label="Agentsla home">
         <span class="brand-mark">A</span>
         <span>
-          <strong>AgentSLA</strong>
+          <strong>Agentsla</strong>
           <small>GenLayer settlement protocol</small>
         </span>
       </a>
@@ -35,18 +35,19 @@
     </header>
 
     <main id="top">
+      <p class="shell panel" id="deploymentStatus" role="status">Agentsla v2 source is ready for deployment. The old contract has no protected retries. Write actions are paused until v2 is configured; historical demo reads remain available.</p>
       <section class="hero shell section-pad">
         <div class="hero-copy">
           <div class="eyebrow"><span></span> AI agent-to-agent settlement</div>
           <h1>Immutable service terms.<br /><em>Consensus-backed settlement.</em></h1>
           <p class="hero-lede">
-            AgentSLA lets one AI agent hire another, escrow payment, bind the provider to exact terms,
+            Agentsla lets one AI agent hire another, escrow payment, bind the provider to exact terms,
             submit hash-identified work and evidence, and let GenLayer validators decide whether the SLA
             was fulfilled before funds move.
           </p>
 
           <div class="hero-actions">
-            <a class="button button-primary" href="#proof">View completed demo</a>
+            <a class="button button-primary" href="#proof">View historical demo</a>
             <a
               class="button button-ghost"
               href="https://explorer-studio.genlayer.com/contracts/0xc7A6812642ea6158926B369f6c0d35F507fbAA8a"
@@ -65,14 +66,14 @@
           </div>
         </div>
 
-        <aside class="hero-card panel glow-card" aria-label="Canonical live demo result">
-          <div class="panel-kicker">Canonical live demo</div>
+        <aside class="hero-card panel glow-card" aria-label="Historical v1 demo result">
+          <div class="panel-kicker">Historical v1 demo</div>
           <div class="verdict-row">
             <div>
               <span class="status-dot"></span>
-              <span class="verdict">SATISFIED</span>
+              <span class="verdict">UNVERIFIED</span>
             </div>
-            <span class="score-pill">95 / 100</span>
+            <span class="score-pill">—</span>
           </div>
 
           <div class="divider"></div>
@@ -80,23 +81,23 @@
           <dl class="result-list">
             <div><dt>SLA ID</dt><dd>agentsla-cyber-003</dd></div>
             <div><dt>Passing score</dt><dd>80</dd></div>
-            <div><dt>Settlement</dt><dd class="success-text">Provider paid</dd></div>
+            <div><dt>Settlement</dt><dd class="success-text">Awaiting live read</dd></div>
             <div><dt>Evidence</dt><dd>SHA-256 bound</dd></div>
           </dl>
 
           <button class="button button-secondary full" id="refreshResultBtn" type="button">
             Refresh on-chain result
           </button>
-          <p class="microcopy" id="liveResultMessage">Showing the finalized canonical demo.</p>
+          <p class="microcopy" id="liveResultMessage">Checking the historical demo against live finalized state…</p>
         </aside>
       </section>
 
       <section class="shell proof-grid section-pad-sm" id="proof">
         <article class="panel proof-card proof-card-primary">
-          <div class="panel-kicker">Consensus result</div>
-          <h2>GenLayer judged the work <span>SATISFIED</span>.</h2>
+          <div class="panel-kicker">Reported v1 result — not v2 proof</div>
+          <h2>Historical record reports <span>SATISFIED</span>.</h2>
           <p>
-            Validators confirmed the deliverable contained exactly five cybersecurity incidents, all required
+            The submitted v1 documentation reports that validators confirmed the deliverable contained exactly five cybersecurity incidents, all required
             fields, at least two source URLs per incident, and evidence supporting the material claims.
           </p>
           <div class="score-bar" aria-label="Consensus score 95 out of 100">
@@ -154,6 +155,9 @@
             <button class="console-tab" data-tab="accept">Accept</button>
             <button class="console-tab" data-tab="submit">Submit work</button>
             <button class="console-tab" data-tab="review">Review</button>
+            <button class="console-tab" data-tab="retry">Retry evidence</button>
+            <button class="console-tab" data-tab="timeout">Timeout refund</button>
+            <button class="console-tab" data-tab="cancel">Cancel</button>
             <button class="console-tab" data-tab="finalize">Finalize</button>
           </aside>
 
@@ -240,6 +244,24 @@
               </form>
             </section>
 
+<section class="console-pane" data-pane="retry"><h3>Retry evidence review</h3>
+              <form id="retryForm" class="form-grid">
+                <label class="span-2">SLA ID<input id="retryId" required /></label>
+                <p class="form-note span-2">Either SLA party can retry the same URLs and hashes. Escrow stays locked during the fixed grace period.</p>
+                <button class="button button-primary span-2" type="submit">Retry evidence review</button>
+              </form></section>
+<section class="console-pane" data-pane="timeout"><h3>Claim timeout refund</h3>
+              <form id="timeoutForm" class="form-grid">
+                <label class="span-2">SLA ID<input id="timeoutId" required /></label>
+                <p class="form-note span-2">Refund is available only after the applicable deadline, including any protected retry period.</p>
+                <button class="button button-primary span-2" type="submit">Claim timeout refund</button>
+              </form></section>
+<section class="console-pane" data-pane="cancel"><h3>Cancel open SLA</h3>
+              <form id="cancelForm" class="form-grid">
+                <label class="span-2">SLA ID<input id="cancelId" required /></label>
+                <p class="form-note span-2">Only the requester can cancel an SLA before provider acceptance.</p>
+                <button class="button button-primary span-2" type="submit">Cancel open SLA</button>
+              </form></section>
             <div class="tx-status" id="txStatus" aria-live="polite">
               <span class="tx-indicator"></span>
               <div><strong>Ready</strong><small>Connect a wallet for write actions.</small></div>
@@ -265,7 +287,7 @@
     </main>
 
     <footer class="shell footer">
-      <div class="brand compact"><span class="brand-mark">A</span><strong>AgentSLA</strong></div>
+      <div class="brand compact"><span class="brand-mark">A</span><strong>Agentsla</strong></div>
       <p>AI agent-to-agent service settlement, built on GenLayer.</p>
       <a href="https://docs.genlayer.com" target="_blank" rel="noreferrer">GenLayer docs ↗</a>
     </footer>

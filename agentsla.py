@@ -3,7 +3,7 @@
 from genlayer import *
 from dataclasses import dataclass
 import hashlib
-import time
+import datetime
 import typing
 
 
@@ -12,6 +12,7 @@ ZERO_ADDRESS = Address("0x0000000000000000000000000000000000000000")
 STATUS_OPEN = "OPEN"
 STATUS_ACCEPTED = "ACCEPTED"
 STATUS_SUBMITTED = "SUBMITTED"
+STATUS_EVIDENCE_REVIEW = "EVIDENCE_REVIEW"
 STATUS_SATISFIED = "SATISFIED"
 STATUS_UNSATISFIED = "UNSATISFIED"
 STATUS_PAID = "PAID"
@@ -26,6 +27,7 @@ MIN_WINDOW = 60
 MAX_ACCEPTANCE_WINDOW = 30 * 24 * 60 * 60
 MAX_SUBMISSION_WINDOW = 90 * 24 * 60 * 60
 REVIEW_TIMEOUT = 24 * 60 * 60
+EVIDENCE_RETRY_GRACE = 24 * 60 * 60
 
 MAX_ARTIFACT_BYTES = 120000
 MAX_URL_CHARS = 700
@@ -67,6 +69,8 @@ class SLA:
     submission_deadline: u64
     submitted_at: u64
     review_deadline: u64
+    evidence_retry_deadline: u64
+    review_attempts: u64
 
     deliverable_url: str
     deliverable_hash: str
@@ -93,8 +97,8 @@ class AgentSLA(gl.Contract):
     # ---------------------------------------------------------
 
     def _now(self) -> int:
-        # GenVM pins time.time() to the transaction timestamp.
-        return int(time.time())
+        # GenVM supplies deterministic datetime from the transaction timestamp.
+        return int(datetime.datetime.now(datetime.timezone.utc).timestamp())
 
     def _require_sla(self, sla_id: str) -> SLA:
         if sla_id not in self.slas:
@@ -145,7 +149,7 @@ class AgentSLA(gl.Contract):
     ) -> str:
         canonical = "\n".join(
             [
-                "AGENTSLA_TERMS_V1",
+                "AGENTSLA_TERMS_V2",
                 sla_id,
                 requester.as_hex,
                 provider.as_hex,
@@ -157,6 +161,8 @@ class AgentSLA(gl.Contract):
                 str(acceptance_window_seconds),
                 str(submission_window_seconds),
                 str(passing_score),
+                str(REVIEW_TIMEOUT),
+                str(EVIDENCE_RETRY_GRACE),
             ]
         )
         return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
@@ -187,42 +193,48 @@ class AgentSLA(gl.Contract):
         deliverable/evidence and judge whether the accepted SLA was fulfilled.
         """
 
-        def fixed_unsatisfied(summary: str, deliverable_ok: bool, evidence_ok: bool) -> dict:
+        def evidence_review(summary: str, deliverable_ok: bool, evidence_ok: bool) -> dict:
             return {
-                "verdict": VERDICT_UNSATISFIED,
+                "verdict": STATUS_EVIDENCE_REVIEW,
                 "score": 0,
                 "summary": summary[:600],
                 "deliverable_hash_match": deliverable_ok,
                 "evidence_hash_match": evidence_ok,
             }
 
-        def fetch_artifact(url: str, expected_hash: str) -> typing.Any:
-            # gl.nondet.web.get() in the pinned runner reliably exposes body.
-            # Do not assume a requests-style status_code attribute exists.
-            try:
-                response = gl.nondet.web.get(url)
-                body = response.body
-            except Exception:
-                return {"available": False, "hash_ok": False, "text": ""}
-
-            # Bound what enters the LLM prompt while hashing the exact full body.
-            digest = hashlib.sha256(body).hexdigest()
-            if digest.lower() != expected_hash.lower():
-                return {"available": True, "hash_ok": False, "text": ""}
-
-            text = body[:MAX_ARTIFACT_BYTES].decode("utf-8", errors="replace")
-            return {"available": True, "hash_ok": True, "text": text}
-
         def leader_fn() -> dict:
+            def fetch_artifact(url: str, expected_hash: str) -> typing.Any:
+                # gl.nondet.web.get() in the pinned runner reliably exposes body.
+                # Do not assume a requests-style status_code attribute exists.
+                try:
+                    response = gl.nondet.web.get(url)
+                    body = response.body
+                    # Runners may expose status or status_code; older ones only body.
+                    status = getattr(response, "status", getattr(response, "status_code", 200))
+                    if int(status) < 200 or int(status) >= 300:
+                        return {"available": False, "hash_ok": False, "text": ""}
+                    if not isinstance(body, bytes) or len(body) > MAX_ARTIFACT_BYTES:
+                        return {"available": False, "hash_ok": False, "text": ""}
+                except Exception:
+                    return {"available": False, "hash_ok": False, "text": ""}
+
+                # Only complete, size-bounded, authenticated artifacts reach the jury.
+                digest = hashlib.sha256(body).hexdigest()
+                if digest.lower() != expected_hash.lower():
+                    return {"available": True, "hash_ok": False, "text": ""}
+
+                text = body.decode("utf-8", errors="replace")
+                return {"available": True, "hash_ok": True, "text": text}
+
             deliverable = fetch_artifact(deliverable_url, deliverable_hash)
             if not deliverable["available"]:
-                return fixed_unsatisfied(
-                    "The submitted deliverable URL is unavailable or returned an HTTP error.",
+                return evidence_review(
+                    "The submitted deliverable URL is unavailable, oversized, or returned an HTTP error; escrow is held for retry.",
                     False,
                     False,
                 )
             if not deliverable["hash_ok"]:
-                return fixed_unsatisfied(
+                return evidence_review(
                     "The deliverable bytes do not match the submitted SHA-256 digest.",
                     False,
                     False,
@@ -230,13 +242,13 @@ class AgentSLA(gl.Contract):
 
             evidence = fetch_artifact(evidence_url, evidence_hash)
             if not evidence["available"]:
-                return fixed_unsatisfied(
-                    "The submitted evidence URL is unavailable or returned an HTTP error.",
+                return evidence_review(
+                    "The submitted evidence URL is unavailable, oversized, or returned an HTTP error; escrow is held for retry.",
                     True,
                     False,
                 )
             if not evidence["hash_ok"]:
-                return fixed_unsatisfied(
+                return evidence_review(
                     "The evidence bytes do not match the submitted SHA-256 digest.",
                     True,
                     False,
@@ -490,6 +502,8 @@ Return ONLY a JSON object with exactly these keys:
             submission_deadline=u64(0),
             submitted_at=u64(0),
             review_deadline=u64(0),
+            evidence_retry_deadline=u64(0),
+            review_attempts=u64(0),
             deliverable_url="",
             deliverable_hash="",
             evidence_url="",
@@ -564,13 +578,26 @@ Return ONLY a JSON object with exactly these keys:
     @gl.public.write
     def review_sla(self, sla_id: str) -> None:
         sla = self._require_sla(sla_id)
-        now = self._now()
-
         if sla.status != STATUS_SUBMITTED:
             raise gl.vm.UserError("SLA is not awaiting consensus review")
-        if now > int(sla.review_deadline):
+        if self._now() > int(sla.review_deadline):
             raise gl.vm.UserError("Review deadline has passed; use timeout refund")
+        self._review(sla_id)
 
+    @gl.public.write
+    def retry_review(self, sla_id: str) -> None:
+        sla = self._require_sla(sla_id)
+        if gl.message.sender_address not in (sla.requester, sla.provider):
+            raise gl.vm.UserError("Only an SLA party can retry evidence review")
+        if sla.status != STATUS_EVIDENCE_REVIEW:
+            raise gl.vm.UserError("SLA is not awaiting an evidence retry")
+        if self._now() > int(sla.evidence_retry_deadline):
+            raise gl.vm.UserError("Evidence retry deadline has passed; use timeout refund")
+        self._review(sla_id)
+
+    def _review(self, sla_id: str) -> None:
+        sla = self._require_sla(sla_id)
+        now = self._now()
         # Storage-backed values must be copied to ordinary memory before use
         # inside the nondeterministic consensus block.
         memory_sla = gl.storage.copy_to_memory(sla)
@@ -591,12 +618,23 @@ Return ONLY a JSON object with exactly these keys:
         verdict = str(result["verdict"])
         score = int(result["score"])
 
+        if verdict not in (
+            VERDICT_SATISFIED, VERDICT_UNSATISFIED, STATUS_EVIDENCE_REVIEW
+        ):
+            raise gl.vm.UserError("Invalid consensus verdict")
+        if verdict == VERDICT_SATISFIED and score < int(sla.passing_score):
+            verdict = VERDICT_UNSATISFIED
+        sla.review_attempts = u64(int(sla.review_attempts) + 1)
         sla.verdict = verdict
         sla.score = u8(score)
         sla.summary = str(result["summary"])[:600]
         sla.reviewed_at = u64(now)
 
-        if verdict == VERDICT_SATISFIED:
+        if verdict == STATUS_EVIDENCE_REVIEW:
+            # Absolute deadline: retries cannot roll the window forward.
+            sla.evidence_retry_deadline = u64(int(sla.review_deadline) + EVIDENCE_RETRY_GRACE)
+            sla.status = STATUS_EVIDENCE_REVIEW
+        elif verdict == VERDICT_SATISFIED:
             sla.status = STATUS_SATISFIED
         else:
             sla.status = STATUS_UNSATISFIED
@@ -654,6 +692,9 @@ Return ONLY a JSON object with exactly these keys:
         elif sla.status == STATUS_SUBMITTED and now > int(sla.review_deadline):
             timed_out = True
 
+        elif sla.status == STATUS_EVIDENCE_REVIEW and now > int(sla.evidence_retry_deadline):
+            timed_out = True
+
         if not timed_out:
             raise gl.vm.UserError("No refundable SLA timeout has been reached")
 
@@ -664,6 +705,10 @@ Return ONLY a JSON object with exactly these keys:
     # ---------------------------------------------------------
     # Public view methods
     # ---------------------------------------------------------
+
+    @gl.public.view
+    def get_protocol_version(self) -> str:
+        return "2"
 
     @gl.public.view
     def get_sla(self, sla_id: str) -> SLA:
@@ -693,4 +738,7 @@ Return ONLY a JSON object with exactly these keys:
             "score": int(sla.score),
             "summary": sla.summary,
             "settled": sla.settled,
+            "review_deadline": int(sla.review_deadline),
+            "evidence_retry_deadline": int(sla.evidence_retry_deadline),
+            "review_attempts": int(sla.review_attempts),
         }

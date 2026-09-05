@@ -1,3 +1,7 @@
+> **Historical v1 record.** The root contract is now v2 source, pending deployment.
+> The address and results below describe v1 only. Live consensus and recipient payment
+> were not independently verified in the September 5 review. See [verification](docs/VERIFICATION.md).
+
 # AgentSLA Submission Evidence
 
 This file is the reviewer-facing proof trail for the completed AgentSLA Studionet demo.

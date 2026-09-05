@@ -1,145 +1,104 @@
-# AgentSLA
+# Agentsla
 
-**AI Agent-to-Agent Contract Settlement on GenLayer**
+**AI agent service escrow and consensus settlement on GenLayer.** A requester
+funds an immutable service agreement, the named provider accepts its terms hash,
+and validators judge authenticated deliverables before payment or refund.
 
-AgentSLA lets one agent fund a service agreement for another agent, bind both sides to immutable terms, submit hash-bound work and evidence, and use GenLayer consensus to determine whether the SLA was satisfied before escrow is settled.
+## Current status — v2 deployment pending
 
-## Live DApp
+The root `agentsla.py` is **v2 source with protected evidence retries**. It has
+not been deployed in this update. The old address
+`0xc7A6812642ea6158926B369f6c0d35F507fbAA8a` is the **historical v1 deployment**
+and does not implement these protections. GitHub updates cannot upgrade it.
 
-- Website: `https://agentsla.netlify.app`
-- GitHub: `https://github.com/amzar1st/agentsla-demo`
+The existing website is [agentsla.netlify.app](https://agentsla.netlify.app).
+The updated frontend disables writes until a deployed v2 address is configured
+and reports protocol version `2`. Historical v1 reads and proof links remain
+available. Publishing this source to Netlify, if Git-connected, will pause old
+write actions until that configuration is supplied.
 
-## Core flow
+**Submission is pending a v2 live demonstration and payment verification.**
+See [verification results](docs/VERIFICATION.md) and the
+[deployment runbook](docs/V2_RUNBOOK.md).
 
-`CREATE + FUND → ACCEPT TERMS → SUBMIT WORK → GENLAYER REVIEW → SATISFIED / UNSATISFIED → PAY / REFUND`
+## Why GenLayer is central
 
-## Why GenLayer
+Identity, reward, deadlines, immutable terms and SHA-256 authentication are
+objective checks. GenLayer validators independently fetch the same artifacts
+and judge fulfillment of the natural-language requirements. The accepted
+verdict controls escrow settlement. The frontend uses `genlayer-js` to read
+and write the Intelligent Contract; no application database is required.
 
-Ordinary smart contracts can verify identities, balances, timestamps and hashes, but they cannot reliably judge whether a natural-language service commitment was materially fulfilled. AgentSLA keeps objective checks deterministic and uses GenLayer validators only for the fulfillment judgment.
+## Protected evidence review
 
-## Canonical Studionet deployment
+| Result | Consequence |
+| --- | --- |
+| Authenticated `SATISFIED`, score at least the agreed threshold | `finalize_sla` emits the provider payment |
+| Authenticated `UNSATISFIED` or score below threshold | `finalize_sla` emits the requester refund |
+| Fetch exception, non-2xx HTTP response, oversized artifact or hash mismatch | `EVIDENCE_REVIEW`; escrow stays locked |
+| Evidence restored during grace period | Either party calls `retry_review` with the original URLs and hashes |
+| Grace period expires | `claim_timeout_refund` emits the requester refund |
 
-- Contract: `0xc7A6812642ea6158926B369f6c0d35F507fbAA8a`
-- Deployment transaction: `0xf38aa4cf30da510c5eff61b13fdc8eef9e33fe34281f2dbe599b99ec94c88c5c`
-- Network: GenLayer Studionet
-- Chain ID: `61999`
-- RPC: `https://studio.genlayer.com/api`
-- Explorer: `https://explorer-studio.genlayer.com`
+The original review window is 24 hours after submission. Evidence failure
+protects escrow until **original review deadline + 24 hours**, inclusive.
+A retry at the deadline is allowed; timeout refund requires a strictly later
+transaction timestamp. Repeated failures never extend this absolute deadline.
+An outage is not recorded as a failed service judgment. Artifacts over 120,000
+bytes are rejected from judgment instead of silently truncating the jury input.
 
-Older AgentSLA deployments were debugging iterations and are not canonical.
+V2 terms hashes bind the review and retry durations. URL/hash changes are not
+accepted during retry. `get_result` exposes review attempts and deadlines.
 
-## Completed live demo
+## Historical evidence
 
-- SLA ID: `agentsla-cyber-003`
-- Title: `Cybersecurity Incident Research SLA`
-- Passing score: `80`
-- Immutable terms hash: `b7be1201bfd6c06d8e70cdf3a368ffe5b6e4436547e554891cd8b315a80d1303`
-- Consensus verdict: `SATISFIED`
-- Consensus score: `95 / 100`
-- Final settlement: provider paid
+The prior documentation reports SLA `agentsla-cyber-003`, `SATISFIED`, score
+`95/100`, and provider payment. These remain **historical reported claims**,
+not proof of v2. Explorer/RPC access was unavailable during this review, so the
+live consensus result, emitted transfer and recipient receipt were not
+independently verified. See [historical proof links](SUBMISSION_EVIDENCE.md).
 
-### Lifecycle transactions
+The exact repository bytes of `report.json` and `EVIDENCE.md` match the
+previously recorded SHA-256 digests. Keep those files unchanged; they are demo
+evidence, not general project documentation.
 
-1. Deploy: `0xf38aa4cf30da510c5eff61b13fdc8eef9e33fe34281f2dbe599b99ec94c88c5c`
-2. Create + fund: `0x75fdc6d3c5ee2daf44f30f20f7b80fd54234beee85b7f6bf5d1b37cdd5e8b212`
-3. Provider accepts immutable terms: `0x6c877a0aacd51b4b11795d540d8eb3121691d9a9b78aff16b937dd591ad25722`
-4. Provider submits hash-bound work: `0x2053c8c2b4373f7b12c2035486f0680b0bf6629db1ea41ee39ced0e69403342c`
-5. Normal / Full Consensus review: `0x58da7437a475bacfe4d35985c4e483714ba02b095442dfe612d8bd8a44a827d0`
-6. Finalize settlement: `0xec12f79864d65061601e679535efb8dba8d4c0116b3fb2e1dca2ea0d7f108862`
+## Run and test
 
-## Consensus result
-
-GenLayer returned `SATISFIED` with a score of `95`. The adjudication found that the deliverable contained exactly five incidents, included the required fields and at least two source URLs per incident, and that the supplied evidence corroborated the material claims.
-
-## Demo artifact integrity
-
-- Deliverable: `https://raw.githubusercontent.com/amzar1st/agentsla-demo/main/report.json`
-- `report.json` SHA-256: `033ee9d4c7ba59f2afb41d239edad0067a5be963dbfcb457f4889b6eaed33abb`
-- Evidence: `https://raw.githubusercontent.com/amzar1st/agentsla-demo/main/EVIDENCE.md`
-- `EVIDENCE.md` SHA-256: `b9fbe4eed335704a9e42ea12351add509d9f6b76fea9bafb9ebbb72316426517`
-
-The contract retrieves the public artifacts during consensus review and verifies their exact SHA-256 digests before using them as adjudication input.
-
-## Frontend DApp
-
-The repository includes a lightweight production frontend in `frontend/`, deployed at `https://agentsla.netlify.app`.
-
-Features:
-
-- polished responsive AgentSLA dashboard;
-- canonical `95/100 SATISFIED` proof view;
-- live `get_result` read against the deployed contract;
-- MetaMask / EIP-1193 wallet connection;
-- automatic Studionet network add/switch;
-- browser actions for `create_sla`, `accept_sla`, `submit_work`, `review_sla`, and `finalize_sla`;
-- GenLayer fee estimation before writes;
-- finalization tracking with explicit transaction-success checks;
-- direct links to the canonical contract, consensus transaction and settlement transaction.
-
-### Run locally
+Python 3.12+ and Node.js 22:
 
 ```bash
+python -m pip install -r requirements-dev.txt
+python -m pytest tests/direct -q
+genvm-lint agentsla.py
 cd frontend
-npm install
+npm ci
+npm test
+npm run build
 npm run dev
 ```
 
-### Production build
+The first direct-mode test run downloads the GenVM SDK. Tests mock web/LLM
+responses and intercept actual SDK transfer requests; they do not move GEN.
 
-```bash
-cd frontend
-npm install
-npm run build
-```
+To activate v2, set `VITE_AGENTSLA_V2_ADDRESS` to the new contract address in
+the frontend build environment, rebuild, and complete the live runbook.
+Never use the historical v1 address for this variable.
 
-The frontend uses `genlayer-js` with the official Studionet chain definition. The DApp has no backend or database; the Intelligent Contract is the source of truth.
+## Repository map
 
-## Netlify deployment
+- `agentsla.py` — v2 Intelligent Contract
+- `frontend/` — wallet interface, protected deployment controls and frontend tests
+- `tests/direct/test_agentsla.py` — authentication, authorization, deadlines, consensus and emitted-transfer regressions
+- `docs/V2_RUNBOOK.md` — deployment and live evidence checklist
+- `docs/VERIFICATION.md` — actual checks, results and remaining limitations
+- `DEPLOYMENT.md`, `SUBMISSION_EVIDENCE.md` — historical deployment records
+- `PROJECT_SUBMISSION.md` — draft pending live v2 evidence
+- `report.json`, `EVIDENCE.md` — unchanged historical demo artifacts
+- `.github/workflows/verify.yml` — repeatable automated checks
 
-`netlify.toml` is included at the repository root.
+## Contract interface
 
-Production site: `https://agentsla.netlify.app`
+Writes: `create_sla`, `accept_sla`, `submit_work`, `review_sla`, `retry_review`,
+`finalize_sla`, `cancel_open_sla`, `claim_timeout_refund`.
 
-For a Git-connected Netlify deployment, use the repository as-is. Netlify will:
-
-- build from `frontend/`;
-- run `npm install && npm run build`;
-- publish `frontend/dist`;
-- use Node.js 22.
-
-No application secrets are required for the canonical public demo.
-
-## Contract methods
-
-### Writes
-
-- `create_sla`
-- `accept_sla`
-- `submit_work`
-- `review_sla`
-- `finalize_sla`
-- `cancel_open_sla`
-- `claim_timeout_refund`
-
-### Reads
-
-- `get_sla`
-- `get_sla_count`
-- `get_sla_id`
-- `get_terms_hash`
-- `get_result`
-
-## Project files
-
-- `agentsla.py` — canonical GenLayer Intelligent Contract source
-- `frontend/` — wallet-connected AgentSLA DApp
-- `report.json` — canonical provider demo deliverable
-- `EVIDENCE.md` — source/evidence map for the demo report
-- `DEPLOYMENT.md` — canonical deployment and lifecycle record
-- `SUBMISSION_EVIDENCE.md` — reviewer-facing proof trail
-- `PROJECT_SUBMISSION.md` — copy-ready project submission package
-- `netlify.toml` — production hosting configuration
-
-## Status
-
-**End-to-end Studionet demo completed successfully.** The provider explicitly accepted immutable terms, submitted hash-bound work and evidence, GenLayer Full Consensus returned `SATISFIED` at `95/100`, and the escrow was finalized to the provider. The wallet-connected production DApp is live at `https://agentsla.netlify.app`.
+Reads: `get_protocol_version`, `get_sla`, `get_sla_count`, `get_sla_id`,
+`get_terms_hash`, `get_result`.

@@ -3,7 +3,13 @@ import { createClient } from 'genlayer-js';
 import { studionet } from 'genlayer-js/chains';
 import { TransactionHashVariant } from 'genlayer-js/types';
 
-const CONTRACT_ADDRESS = '0xc7A6812642ea6158926B369f6c0d35F507fbAA8a';
+const HISTORICAL_ADDRESS = '0xc7A6812642ea6158926B369f6c0d35F507fbAA8a';
+const configuredAddress = import.meta.env.VITE_AGENTSLA_V2_ADDRESS?.trim();
+if (configuredAddress && !/^0x[a-fA-F0-9]{40}$/.test(configuredAddress)) {
+  throw new Error('VITE_AGENTSLA_V2_ADDRESS must be a valid contract address.');
+}
+const CONTRACT_ADDRESS = configuredAddress || HISTORICAL_ADDRESS;
+let v2Ready = false;
 const CANONICAL_SLA_ID = 'agentsla-cyber-003';
 const EXPLORER_BASE = 'https://explorer-studio.genlayer.com';
 const STUDIONET_CHAIN_ID_DECIMAL = 61999;
@@ -49,18 +55,24 @@ function parseGen(value) {
 
 function setTxStatus(kind, title, detail, txHash = '') {
   txStatus.dataset.kind = kind;
-  const explorer = txHash
-    ? `<a href="${EXPLORER_BASE}/tx/${txHash}" target="_blank" rel="noreferrer">Open transaction ↗</a>`
-    : '';
-
-  txStatus.innerHTML = `
-    <span class="tx-indicator"></span>
-    <div>
-      <strong>${title}</strong>
-      <small>${detail}</small>
-      ${explorer}
-    </div>
-  `;
+  txStatus.replaceChildren();
+  const indicator = document.createElement('span');
+  indicator.className = 'tx-indicator';
+  const body = document.createElement('div');
+  const heading = document.createElement('strong');
+  heading.textContent = title;
+  const description = document.createElement('small');
+  description.textContent = detail;
+  body.append(heading, description);
+  if (/^0x[0-9a-fA-F]{64}$/.test(txHash)) {
+    const link = document.createElement('a');
+    link.href = `${EXPLORER_BASE}/tx/${txHash}`;
+    link.target = '_blank';
+    link.rel = 'noreferrer';
+    link.textContent = 'Open transaction ↗';
+    body.append(link);
+  }
+  txStatus.append(indicator, body);
 }
 
 async function ensureStudionet() {
@@ -131,12 +143,12 @@ async function connectWallet() {
   }
 }
 
-async function readSlaResult(slaId) {
+async function readSlaResult(slaId, address = CONTRACT_ADDRESS) {
   const id = String(slaId || '').trim();
   if (!id) throw new Error('Enter an SLA ID.');
 
   return publicClient.readContract({
-    address: CONTRACT_ADDRESS,
+    address,
     functionName: 'get_result',
     args: [id],
     transactionHashVariant: TransactionHashVariant.LATEST_FINAL,
@@ -149,7 +161,7 @@ async function refreshCanonicalResult() {
     refreshResultBtn.textContent = 'Refreshing…';
     liveResultMessage.textContent = 'Reading latest finalized contract state…';
 
-    const result = await readSlaResult(CANONICAL_SLA_ID);
+    const result = await readSlaResult(CANONICAL_SLA_ID, HISTORICAL_ADDRESS);
     const status = result?.status ?? 'UNKNOWN';
     const verdict = result?.verdict ?? 'UNKNOWN';
     const score = Number(result?.score ?? 0);
@@ -164,7 +176,10 @@ async function refreshCanonicalResult() {
 
     liveResultMessage.textContent = `Live finalized state: ${status} · ${verdict} · ${score}/100`;
   } catch (error) {
-    liveResultMessage.textContent = `Live read failed: ${error?.message || String(error)}`;
+    $('.verdict').textContent = 'UNVERIFIED';
+    $('.score-pill').textContent = '—';
+    $$('.result-list dd')[2].textContent = 'Live read unavailable';
+    liveResultMessage.textContent = `Historical demo could not be verified: ${error?.message || String(error)}`;
   } finally {
     refreshResultBtn.disabled = false;
     refreshResultBtn.textContent = 'Refresh on-chain result';
@@ -181,7 +196,12 @@ async function requireWallet() {
 }
 
 async function submitWrite(call, label) {
+  if (!v2Ready) {
+    setTxStatus('error', 'Upgrade pending', 'Write actions open after the v2 contract is deployed and verified.');
+    throw new Error('Deploy and configure the v2 contract first.');
+  }
   await requireWallet();
+  await ensureStudionet();
 
   let txId;
   try {
@@ -320,6 +340,18 @@ function wireForms() {
     ).catch(() => {});
   });
 
+  for (const [form, input, method, label] of [
+    ['retryForm', 'retryId', 'retry_review', 'Retry evidence review'],
+    ['timeoutForm', 'timeoutId', 'claim_timeout_refund', 'Claim timeout refund'],
+    ['cancelForm', 'cancelId', 'cancel_open_sla', 'Cancel open SLA'],
+  ]) {
+    $(`#${form}`).addEventListener('submit', async (event) => {
+      event.preventDefault();
+      await submitWrite({ address: CONTRACT_ADDRESS, functionName: method,
+        args: [$(`#${input}`).value.trim()] }, label).catch(() => {});
+    });
+  }
+
   $('#finalizeForm').addEventListener('submit', async (event) => {
     event.preventDefault();
     await submitWrite(
@@ -356,3 +388,24 @@ wireTabs();
 wireForms();
 wireWalletEvents();
 refreshCanonicalResult();
+
+
+async function verifyDeployment() {
+  const banner = $('#deploymentStatus');
+  $$('.console-pane form button[type="submit"]').forEach(button => {
+    if (button.closest('form').id !== 'readForm') button.disabled = true;
+  });
+  if (!configuredAddress) return;
+  try {
+    const version = await publicClient.readContract({address: CONTRACT_ADDRESS,
+      functionName: 'get_protocol_version', args: [],
+      transactionHashVariant: TransactionHashVariant.LATEST_FINAL});
+    if (String(version) !== '2') throw new Error('Contract does not report protocol v2.');
+    v2Ready = true;
+    banner.textContent = `Agentsla v2 · ${CONTRACT_ADDRESS} · protected evidence retries enabled`;
+    $$('.console-pane form button[type="submit"]').forEach(button => button.disabled = false);
+  } catch (error) {
+    banner.textContent = `V2 verification failed; writes disabled: ${error?.message || String(error)}`;
+  }
+}
+verifyDeployment();

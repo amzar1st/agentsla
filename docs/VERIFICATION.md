@@ -1,5 +1,29 @@
 # Agentsla v2 verification — September 5, 2026
 
+## Recheck — September 7, 2026
+
+The verification job was rerun for the unchanged commit
+`a586b0df3503914cc7816d75fc457148f7efff01` in
+[GitHub Actions](https://github.com/amzar1st/agentsla-demo/actions/runs/33949637901).
+The new job, `101623427628`, completed successfully:
+
+- GenVM lint: 3 checks passed.
+- Direct contract tests: 16 passed.
+- Frontend tests: 4 passed, 0 failed.
+- Production build: passed; bundle-size advisory remains.
+
+These are fresh CI results, not live-chain or MetaMask test results. Local test
+dependencies were unavailable in the resumed workspace, so no fresh local test
+pass is claimed. The source SHA-256 remains the value recorded below.
+
+The source was loaded into a dedicated GenLayer Studio editor file named
+`agentsla_v2_verified.py`. Studio displayed the constructor with no parameters
+and an available deployment button, with Normal (Full Consensus) selected.
+This verifies interface generation only. A byte-for-byte export comparison,
+deployment, protocol-version read, and wallet-signed lifecycle remain pending.
+No deployment or payment was submitted during this recheck. The MetaMask
+connection flow was opened; a connection has not yet been verified.
+
 ## Executed checks
 
 | Check | Result |

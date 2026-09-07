@@ -1,62 +1,61 @@
-> **Historical v1 record.** The root contract is now v2 source, pending deployment.
-> The address and results below describe v1 only. Live consensus and recipient payment
-> were not independently verified in the September 5 review. See [verification](docs/VERIFICATION.md).
+# Agentsla v2 deployment
 
-# AgentSLA Deployment
+## Network and application
 
-## Network
-
-GenLayer Studionet
-
-## Live DApp
-
-- Website: `https://agentsla.netlify.app`
-- GitHub: `https://github.com/amzar1st/agentsla-demo`
+- Network: GenLayer Studionet
+- Chain ID: `61999`
+- Public app: `https://agentsla.amzar1st96.chatgpt.site`
+- Repository: `https://github.com/amzar1st/agentsla-demo`
 
 ## Canonical contract
 
-- Contract address: `0xc7A6812642ea6158926B369f6c0d35F507fbAA8a`
-- Deployment transaction: `0xf38aa4cf30da510c5eff61b13fdc8eef9e33fe34281f2dbe599b99ec94c88c5c`
+- Address: `0x635c282A6A6F57521783b4C7C420bB9bC5BB34F4`
+- Deployment tx: `0xd70adeed1dded35bb62a71e9d58d3563dd40931ea5318ba2f623f410ea0c54d9`
+- Source SHA-256: `5ff8f456632cfda7b55e4d1f0e450a677993a905824e8c2b39ba67050a13de5b`
+- Source size: 25,693 bytes
+- `get_protocol_version()`: `"2"`
 
-Older AgentSLA deployments were debugging iterations and are not canonical.
+Studio parsed the source as `agentsla_v2_1.py`, exposed the expected constructor
+and six read/eight write methods, and finalized the deployment under Normal
+(Full Consensus) execution mode.
 
-## Canonical demo SLA
+## Canonical successful SLA
 
-- SLA ID: `agentsla-cyber-003`
-- Title: `Cybersecurity Incident Research SLA`
+- SLA ID: `agentsla-v2-verified-002`
+- Terms hash: `8791e92f53a8caaba8e170f7936e6ca1f657f1ea6501ab65ed859778e79b2120`
 - Passing score: `80`
-- Immutable terms hash: `b7be1201bfd6c06d8e70cdf3a368ffe5b6e4436547e554891cd8b315a80d1303`
+- Reward: `1 GEN` (virtual Studionet funds)
+- Create: `0x150bf70c56b1946ae06595d9462098d1baca7b6c05afa7ea5be267ae3956f4ba`
+- Provider accept: `0x20174ba95dd1a1391c04ab923c26a3613169df8ef596376087cc4e8096c6e27a`
+- Submit work: `0x98fed8fdd3d8197315a06d75e1626a9fa068135d9e7927c9a741ce97c911d8ef`
+- Full Consensus review: `0x73d99219ef0e142e5d7659e71b88bc9c9a2ec0e9572aabae6d93448d1ae1bed6`
+- Finalize payout: `0x0266239d1de25a501b3337e87bab7096756746f47717e3e226f504cf2de33c6d`
+- Result: `SATISFIED`, score `92`, then `PAID`, `settled: true`
 
-## Completed lifecycle transactions
+Immediately after settlement, Studio displayed requester balance `8 GEN` and
+provider balance `1 GEN`, up from `0 GEN` for the provider.
 
-1. Contract deployed: `0xf38aa4cf30da510c5eff61b13fdc8eef9e33fe34281f2dbe599b99ec94c88c5c`
-2. SLA created and funded: `0x75fdc6d3c5ee2daf44f30f20f7b80fd54234beee85b7f6bf5d1b37cdd5e8b212`
-3. Provider accepted exact immutable terms: `0x6c877a0aacd51b4b11795d540d8eb3121691d9a9b78aff16b937dd591ad25722`
-4. Provider submitted hash-bound work and evidence: `0x2053c8c2b4373f7b12c2035486f0680b0bf6629db1ea41ee39ced0e69403342c`
-5. Full Consensus SLA review: `0x58da7437a475bacfe4d35985c4e483714ba02b095442dfe612d8bd8a44a827d0`
-6. Final escrow settlement: `0xec12f79864d65061601e679535efb8dba8d4c0116b3fb2e1dca2ea0d7f108862`
+## Protected evidence case
 
-## Final consensus result
+SLA `agentsla-v2-outage-001` used a correct deliverable commitment and a
+deliberately mismatched evidence digest. Review tx
+`0xa330ca8a6f90832b45a32adfd7f684d7e77c9c9810948c5d8964133cb37b09e2`
+finalized with `EVIDENCE_REVIEW`, score `0`, `settled: false`, and
+`evidence_retry_deadline = review_deadline + 86400`.
 
-- Status before settlement: `SATISFIED`
-- Verdict: `SATISFIED`
-- Score: `95 / 100`
-- Passing threshold: `80`
-- Settlement outcome: provider paid
-- Final state: `PAID`
+## Refund case
 
-Consensus summary:
+SLA `agentsla-v2-refund-001` was created in tx
+`0x29d15b85547d8ec47ae569d07755992060077e8db381de05dd9162386e36d1b7`
+and cancelled before acceptance in tx
+`0x43cd452edcfbd2604ffbde26e1e2dd7d46913826b30ff397ace56b1cab5c0710`.
+Final state was `CANCELLED`, `settled: true`; requester balance returned to
+`7 GEN` after the temporary 1 GEN escrow.
 
-> The deliverable provides exactly five incidents, each with required fields and at least two source URLs. All summaries and impact statements are corroborated by the supplied evidence, meeting the SLA and passing score.
+## Test accounts
 
-## Demo artifact URLs
+- Requester: `0xF889240e6Fa88D88d81ef1b36f55962Ca61f84e7`
+- Provider: `0x022C28fF8296096a22457bFe82c9f91B53934F0f`
 
-- Deliverable: `https://raw.githubusercontent.com/amzar1st/agentsla-demo/main/report.json`
-- Evidence: `https://raw.githubusercontent.com/amzar1st/agentsla-demo/main/EVIDENCE.md`
-
-## Demo artifact SHA-256
-
-- `report.json`: `033ee9d4c7ba59f2afb41d239edad0067a5be963dbfcb457f4889b6eaed33abb`
-- `EVIDENCE.md`: `b9fbe4eed335704a9e42ea12351add509d9f6b76fea9bafb9ebbb72316426517`
-
-The artifact digests were committed at `submit_work` and verified by the Intelligent Contract during consensus review before adjudication.
+These were ephemeral accounts generated by GenLayer Studio. No MetaMask or
+owner wallet was connected, and no real-value funds were used.

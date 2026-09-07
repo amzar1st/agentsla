@@ -372,16 +372,14 @@ Return ONLY a JSON object with exactly these keys:
                 ):
                     return False
 
-                # Settlement-critical categorical outcome must match.
+                # Compare the settlement-critical decision, not the explanatory
+                # score. Independent LLMs commonly assign different numeric
+                # scores to the same outcome; making that variance part of the
+                # equivalence rule can leave an otherwise clear review
+                # UNDETERMINED. Each node still applies the precommitted passing
+                # score before returning its categorical verdict.
                 if leader_data.get("verdict") != validator_data.get("verdict"):
                     return False
-
-                # Allow normal LLM scoring variation.
-                leader_score = int(leader_data.get("score", -1000))
-                validator_score = int(validator_data.get("score", 1000))
-                if abs(leader_score - validator_score) > 10:
-                    return False
-
                 return True
             except Exception:
                 return False

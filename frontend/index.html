@@ -8,6 +8,7 @@
       name="description"
       content="Agentsla — AI agent-to-agent service escrow and consensus settlement on GenLayer."
     />
+    <link rel="canonical" href="https://agentsla.amzar1st96.chatgpt.site" />
     <title>Agentsla — AI Agent Contract Settlement</title>
   </head>
   <body>
@@ -35,7 +36,7 @@
     </header>
 
     <main id="top">
-      <p class="shell panel" id="deploymentStatus" role="status">Agentsla v2 source is ready for deployment. The old contract has no protected retries. Write actions are paused until v2 is configured; historical demo reads remain available.</p>
+      <p class="shell panel" id="deploymentStatus" role="status">Verifying the deployed Agentsla v2 contract on GenLayer Studionet…</p>
       <section class="hero shell section-pad">
         <div class="hero-copy">
           <div class="eyebrow"><span></span> AI agent-to-agent settlement</div>
@@ -47,10 +48,10 @@
           </p>
 
           <div class="hero-actions">
-            <a class="button button-primary" href="#proof">View historical demo</a>
+            <a class="button button-primary" href="#proof">View verified demo</a>
             <a
               class="button button-ghost"
-              href="https://explorer-studio.genlayer.com/contracts/0xc7A6812642ea6158926B369f6c0d35F507fbAA8a"
+              href="https://explorer-studio.genlayer.com/address/0x635c282A6A6F57521783b4C7C420bB9bC5BB34F4"
               target="_blank"
               rel="noreferrer"
             >
@@ -62,12 +63,12 @@
             <div><span>Network</span><strong>Studionet</strong></div>
             <div><span>Chain ID</span><strong>61999</strong></div>
             <div><span>Native token</span><strong>GEN</strong></div>
-            <div><span>Contract</span><strong>0xc7A6…AA8a</strong></div>
+            <div><span>Contract</span><strong>0x635c…34F4</strong></div>
           </div>
         </div>
 
-        <aside class="hero-card panel glow-card" aria-label="Historical v1 demo result">
-          <div class="panel-kicker">Historical v1 demo</div>
+        <aside class="hero-card panel glow-card" aria-label="Verified v2 demo result">
+          <div class="panel-kicker">Verified v2 demo</div>
           <div class="verdict-row">
             <div>
               <span class="status-dot"></span>
@@ -79,7 +80,7 @@
           <div class="divider"></div>
 
           <dl class="result-list">
-            <div><dt>SLA ID</dt><dd>agentsla-cyber-003</dd></div>
+            <div><dt>SLA ID</dt><dd>agentsla-v2-verified-002</dd></div>
             <div><dt>Passing score</dt><dd>80</dd></div>
             <div><dt>Settlement</dt><dd class="success-text">Awaiting live read</dd></div>
             <div><dt>Evidence</dt><dd>SHA-256 bound</dd></div>
@@ -88,28 +89,27 @@
           <button class="button button-secondary full" id="refreshResultBtn" type="button">
             Refresh on-chain result
           </button>
-          <p class="microcopy" id="liveResultMessage">Checking the historical demo against live finalized state…</p>
+          <p class="microcopy" id="liveResultMessage">Checking the verified demo against live finalized state…</p>
         </aside>
       </section>
 
       <section class="shell proof-grid section-pad-sm" id="proof">
         <article class="panel proof-card proof-card-primary">
-          <div class="panel-kicker">Reported v1 result — not v2 proof</div>
-          <h2>Historical record reports <span>SATISFIED</span>.</h2>
+          <div class="panel-kicker">Verified Full Consensus result</div>
+          <h2>Agentsla v2 reached <span>SATISFIED</span>.</h2>
           <p>
-            The submitted v1 documentation reports that validators confirmed the deliverable contained exactly five cybersecurity incidents, all required
-            fields, at least two source URLs per incident, and evidence supporting the material claims.
+            The live v2 transaction finalized after validators authenticated the commit-pinned report and evidence, then confirmed the material SLA requirements.
           </p>
-          <div class="score-bar" aria-label="Consensus score 95 out of 100">
-            <div style="width: 95%"></div>
+          <div class="score-bar" aria-label="Consensus score 92 out of 100">
+            <div style="width: 92%"></div>
           </div>
-          <div class="score-caption"><span>Passing threshold 80</span><strong>95</strong></div>
+          <div class="score-caption"><span>Passing threshold 80</span><strong>92</strong></div>
         </article>
 
         <article class="panel proof-card">
           <div class="panel-kicker">Immutable terms</div>
           <h3>Provider acceptance is hash-bound.</h3>
-          <p class="mono-wrap">b7be1201bfd6c06d8e70cdf3a368ffe5b6e4436547e554891cd8b315a80d1303</p>
+          <p class="mono-wrap">8791e92f53a8caaba8e170f7936e6ca1f657f1ea6501ab65ed859778e79b2120</p>
         </article>
 
         <article class="panel proof-card">
@@ -168,7 +168,7 @@
                 <span class="badge">No wallet required</span>
               </div>
               <form id="readForm" class="form-grid">
-                <label class="span-2">SLA ID<input id="readSlaId" value="agentsla-cyber-003" /></label>
+                <label class="span-2">SLA ID<input id="readSlaId" value="agentsla-v2-verified-002" /></label>
                 <button class="button button-primary span-2" type="submit">Read finalized result</button>
               </form>
               <pre class="result-box" id="readOutput">Ready.</pre>
@@ -278,9 +278,11 @@
           </div>
           <div class="link-grid">
             <a href="https://github.com/amzar1st/agentsla-demo" target="_blank" rel="noreferrer">GitHub repository <span>↗</span></a>
-            <a href="https://explorer-studio.genlayer.com/contracts/0xc7A6812642ea6158926B369f6c0d35F507fbAA8a" target="_blank" rel="noreferrer">Contract explorer <span>↗</span></a>
-            <a href="https://explorer-studio.genlayer.com/tx/0x58da7437a475bacfe4d35985c4e483714ba02b095442dfe612d8bd8a44a827d0" target="_blank" rel="noreferrer">Consensus review tx <span>↗</span></a>
-            <a href="https://explorer-studio.genlayer.com/tx/0xec12f79864d65061601e679535efb8dba8d4c0116b3fb2e1dca2ea0d7f108862" target="_blank" rel="noreferrer">Settlement tx <span>↗</span></a>
+            <a href="https://explorer-studio.genlayer.com/address/0x635c282A6A6F57521783b4C7C420bB9bC5BB34F4" target="_blank" rel="noreferrer">Contract explorer <span>↗</span></a>
+            <a href="https://explorer-studio.genlayer.com/tx/0x73d99219ef0e142e5d7659e71b88bc9c9a2ec0e9572aabae6d93448d1ae1bed6" target="_blank" rel="noreferrer">Consensus review tx <span>↗</span></a>
+            <a href="https://explorer-studio.genlayer.com/tx/0x0266239d1de25a501b3337e87bab7096756746f47717e3e226f504cf2de33c6d" target="_blank" rel="noreferrer">Provider payout tx <span>↗</span></a>
+            <a href="https://explorer-studio.genlayer.com/tx/0xa330ca8a6f90832b45a32adfd7f684d7e77c9c9810948c5d8964133cb37b09e2" target="_blank" rel="noreferrer">Evidence protection tx <span>↗</span></a>
+            <a href="https://explorer-studio.genlayer.com/tx/0x43cd452edcfbd2604ffbde26e1e2dd7d46913826b30ff397ace56b1cab5c0710" target="_blank" rel="noreferrer">Requester refund tx <span>↗</span></a>
           </div>
         </div>
       </section>

@@ -212,3 +212,11 @@ def test_validator_rejects_different_evidence_or_verdict(env):
     assert env[1].run_validator() is False
     mocks(env, verdict='UNSATISFIED', score=30)
     assert env[1].run_validator() is False
+
+
+def test_validator_accepts_same_decision_despite_score_variation(env):
+    c = submitted(env)
+    mocks(env, verdict='SATISFIED', score=95)
+    c.review_sla('test')
+    mocks(env, verdict='SATISFIED', score=81)
+    assert env[1].run_validator() is True

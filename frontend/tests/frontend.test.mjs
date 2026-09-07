@@ -6,7 +6,7 @@ const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 const source = (await readFile(new URL('../src/main.js', import.meta.url), 'utf8'))
   .replace(/^import .*;\n/gm, '').replaceAll('import.meta.env', 'window.testEnv');
 const flush = async () => { for(let i=0;i<8;i++) await new Promise(r=>setImmediate(r)); };
-async function setup({v2=false, readFail=false, txFail=false}={}) {
+async function setup({v2=false, readFail=false, txFail=false, protocolVersion='2'}={}) {
   const dom = new JSDOM(html, {runScripts:'outside-only', url:'https://example.com'});
   const {window:w} = dom;
   const writes=[];
@@ -17,7 +17,7 @@ async function setup({v2=false, readFail=false, txFail=false}={}) {
   w.createClient = () => ({
     connect:async()=>{},
     readContract:async ({functionName})=>{
-      if(functionName==='get_protocol_version')return '2';
+      if(functionName==='get_protocol_version')return protocolVersion;
       if(readFail)throw new Error('RPC unavailable');
       return {status:'PAID',verdict:'SATISFIED',score:95,settled:true};
     },
@@ -30,12 +30,21 @@ async function setup({v2=false, readFail=false, txFail=false}={}) {
   return {w,writes,close:()=>dom.window.close()};
 }
 
-test('unconfigured v2 disables writes and keeps historical read available',async()=>{
+test('verified default v2 deployment enables writes without an env override',async()=>{
   const e=await setup();
+  try {
+    assert.equal(e.w.document.querySelector('#retryForm button').disabled,false);
+    assert.equal(e.w.document.querySelector('#readForm button').disabled,false);
+    assert.match(e.w.document.querySelector('#deploymentStatus').textContent,/protected evidence retries enabled/);
+  } finally {e.close();}
+});
+
+test('wrong protocol version disables every write action',async()=>{
+  const e=await setup({protocolVersion:'1'});
   try {
     assert.equal(e.w.document.querySelector('#retryForm button').disabled,true);
     assert.equal(e.w.document.querySelector('#readForm button').disabled,false);
-    assert.match(e.w.document.querySelector('#deploymentStatus').textContent,/old contract/);
+    assert.match(e.w.document.querySelector('#deploymentStatus').textContent,/verification failed/i);
   } finally {e.close();}
 });
 
@@ -71,5 +80,17 @@ test('execution failure never reports successful settlement',async()=>{
     await flush();
     assert.equal(e.w.document.querySelector('#txStatus').dataset.kind,'error');
     assert.match(e.w.document.querySelector('#txStatus').textContent,/Inspect the existing transaction/);
+  } finally {e.close();}
+});
+
+test('zero reward is rejected before any wallet write',async()=>{
+  const e=await setup();
+  try {
+    e.w.document.querySelector('#createReward').value='0';
+    e.w.document.querySelector('#createForm').dispatchEvent(new e.w.Event('submit',{bubbles:true,cancelable:true}));
+    await flush();
+    assert.equal(e.writes.length,0);
+    assert.equal(e.w.document.querySelector('#txStatus').dataset.kind,'error');
+    assert.match(e.w.document.querySelector('#txStatus').textContent,/greater than zero/i);
   } finally {e.close();}
 });

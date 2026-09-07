@@ -3,14 +3,14 @@ import { createClient } from 'genlayer-js';
 import { studionet } from 'genlayer-js/chains';
 import { TransactionHashVariant } from 'genlayer-js/types';
 
-const HISTORICAL_ADDRESS = '0xc7A6812642ea6158926B369f6c0d35F507fbAA8a';
-const configuredAddress = import.meta.env.VITE_AGENTSLA_V2_ADDRESS?.trim();
+const DEFAULT_CONTRACT_ADDRESS = '0x635c282A6A6F57521783b4C7C420bB9bC5BB34F4';
+const configuredAddress = import.meta.env.VITE_AGENTSLA_V2_ADDRESS?.trim() || DEFAULT_CONTRACT_ADDRESS;
 if (configuredAddress && !/^0x[a-fA-F0-9]{40}$/.test(configuredAddress)) {
   throw new Error('VITE_AGENTSLA_V2_ADDRESS must be a valid contract address.');
 }
-const CONTRACT_ADDRESS = configuredAddress || HISTORICAL_ADDRESS;
+const CONTRACT_ADDRESS = configuredAddress;
 let v2Ready = false;
-const CANONICAL_SLA_ID = 'agentsla-cyber-003';
+const CANONICAL_SLA_ID = 'agentsla-v2-verified-002';
 const EXPLORER_BASE = 'https://explorer-studio.genlayer.com';
 const STUDIONET_CHAIN_ID_DECIMAL = 61999;
 const STUDIONET_CHAIN_ID_HEX = '0xf22f';
@@ -50,7 +50,9 @@ function parseGen(value) {
 
   const [whole, fraction = ''] = normalized.split('.');
   const paddedFraction = `${fraction}${'0'.repeat(18)}`.slice(0, 18);
-  return BigInt(whole) * 10n ** 18n + BigInt(paddedFraction || '0');
+  const amount = BigInt(whole) * 10n ** 18n + BigInt(paddedFraction || '0');
+  if (amount <= 0n) throw new Error('Reward must be greater than zero GEN.');
+  return amount;
 }
 
 function setTxStatus(kind, title, detail, txHash = '') {
@@ -161,7 +163,7 @@ async function refreshCanonicalResult() {
     refreshResultBtn.textContent = 'Refreshing…';
     liveResultMessage.textContent = 'Reading latest finalized contract state…';
 
-    const result = await readSlaResult(CANONICAL_SLA_ID, HISTORICAL_ADDRESS);
+    const result = await readSlaResult(CANONICAL_SLA_ID);
     const status = result?.status ?? 'UNKNOWN';
     const verdict = result?.verdict ?? 'UNKNOWN';
     const score = Number(result?.score ?? 0);
@@ -171,7 +173,7 @@ async function refreshCanonicalResult() {
     $('.score-pill').textContent = `${score} / 100`;
     const resultRows = $$('.result-list dd');
     if (resultRows[2]) {
-      resultRows[2].textContent = settled && status === 'PAID' ? 'Provider paid' : status;
+      resultRows[2].textContent = settled && status === 'PAID' ? 'Provider paid · verified' : status;
     }
 
     liveResultMessage.textContent = `Live finalized state: ${status} · ${verdict} · ${score}/100`;
@@ -179,7 +181,7 @@ async function refreshCanonicalResult() {
     $('.verdict').textContent = 'UNVERIFIED';
     $('.score-pill').textContent = '—';
     $$('.result-list dd')[2].textContent = 'Live read unavailable';
-    liveResultMessage.textContent = `Historical demo could not be verified: ${error?.message || String(error)}`;
+    liveResultMessage.textContent = `Live v2 demo could not be verified: ${error?.message || String(error)}`;
   } finally {
     refreshResultBtn.disabled = false;
     refreshResultBtn.textContent = 'Refresh on-chain result';
@@ -286,7 +288,13 @@ function wireForms() {
       Number($('#createPassing').value),
     ];
 
-    const value = parseGen($('#createReward').value);
+    let value;
+    try {
+      value = parseGen($('#createReward').value);
+    } catch (error) {
+      setTxStatus('error', 'Invalid reward', error?.message || String(error));
+      return;
+    }
     await submitWrite(
       {
         address: CONTRACT_ADDRESS,
@@ -395,7 +403,6 @@ async function verifyDeployment() {
   $$('.console-pane form button[type="submit"]').forEach(button => {
     if (button.closest('form').id !== 'readForm') button.disabled = true;
   });
-  if (!configuredAddress) return;
   try {
     const version = await publicClient.readContract({address: CONTRACT_ADDRESS,
       functionName: 'get_protocol_version', args: [],

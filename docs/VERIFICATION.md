@@ -1,87 +1,126 @@
-# Agentsla v2 verification — September 5, 2026
+# Agentsla v2 verification — September 7, 2026
 
-## Recheck — September 7, 2026
+## Outcome
 
-The verification job was rerun for the unchanged commit
-`a586b0df3503914cc7816d75fc457148f7efff01` in
-[GitHub Actions](https://github.com/amzar1st/agentsla-demo/actions/runs/33949637901).
-The new job, `101623427628`, completed successfully:
+The corrected v2 contract was deployed and exercised end to end in GenLayer
+Studio using Normal (Full Consensus). The successful demo returned
+`SATISFIED`, score `92/100`, then paid the provider. Separate live cases proved
+that an evidence mismatch holds escrow and that cancellation refunds an open
+SLA.
 
-- GenVM lint: 3 checks passed.
-- Direct contract tests: 16 passed.
-- Frontend tests: 4 passed, 0 failed.
-- Production build: passed; bundle-size advisory remains.
+## Canonical deployment
 
-These are fresh CI results, not live-chain or MetaMask test results. Local test
-dependencies were unavailable in the resumed workspace, so no fresh local test
-pass is claimed. The source SHA-256 remains the value recorded below.
-
-The source was loaded into a dedicated GenLayer Studio editor file named
-`agentsla_v2_verified.py`. Studio displayed the constructor with no parameters
-and an available deployment button, with Normal (Full Consensus) selected.
-This verifies interface generation only. A byte-for-byte export comparison,
-deployment, protocol-version read, and wallet-signed lifecycle remain pending.
-No deployment or payment was submitted during this recheck. The MetaMask
-connection flow was opened; a connection has not yet been verified.
-
-## Executed checks
-
-| Check | Result |
+| Item | Verified value |
 | --- | --- |
-| GenVM safety lint | Passed, 3 checks (`genvm-linter` 0.11.0) |
-| Direct contract regression tests | 16 passed (`genlayer-test` 0.29.2, pytest 9.1.1, GenVM SDK v0.2.12) |
-| Frontend DOM and wallet-adapter tests | 4 passed (mocked RPC and wallet) |
-| Production frontend build | Passed, Vite 8.2.2; bundle-size advisory only |
-| Historical report.json SHA-256 | Matches recorded digest |
-| Historical EVIDENCE.md SHA-256 | Matches recorded digest |
-| Live v1 consensus/recipient payment | Not independently verified; access unavailable |
-| Live wallet signatures and account/network behavior | Not exercised with the owner's wallet |
-| V2 deployment/full consensus/recipient payment | Pending new deployment |
+| Network | GenLayer Studionet, chain ID `61999` |
+| Contract | `0x635c282A6A6F57521783b4C7C420bB9bC5BB34F4` |
+| Deployment tx | `0xd70adeed1dded35bb62a71e9d58d3563dd40931ea5318ba2f623f410ea0c54d9` |
+| Deployment status | `FINALIZED` |
+| Protocol read | `"2"` |
+| Repository source SHA-256 | `5ff8f456632cfda7b55e4d1f0e450a677993a905824e8c2b39ba67050a13de5b` |
+| Source size | 25,693 bytes; 742 newline-terminated lines |
 
-Root v2 `agentsla.py` SHA-256:
-`d5c3515c9d2077f2cdaf658f536088167d4257583b34043d7e5b45d39291f98d`
+The local source was entered into Studio as `agentsla_v2_1.py`. Studio displayed
+743 editor rows including the final blank row, parsed the constructor with no
+parameters, and exposed all expected methods before deployment. The browser
+did not provide a reliable post-deployment source export, so the repository
+digest records the exact local input rather than claiming an explorer-side
+byte-for-byte download comparison.
 
-The lint result is a static safety check, not GenVM execution certification.
-Direct tests execute contract logic with the pinned SDK and real storage/calldata
-handling, mock web/LLM results, and capture SDK `EthSend` requests (recipient,
-value and empty calldata). They assert provider/requester destinations and
-prevention of duplicate settlement. They do not execute those transfers on a
-live chain or confirm recipient balances.
+## Full Consensus success and payout
 
-Regression coverage: provider-only acceptance/submission; exact terms hash;
-party-only retry; requester-only cancellation; original deadline expiration;
-fixed retry grace and its exact boundary; fetch exceptions; HTTP 503; deliverable
-and evidence hash mismatches; oversize input; recovery and retry; low-score and
-unsatisfied refunds; successful payout; duplicate settlement; validator disagreement.
+SLA `agentsla-v2-verified-002` used a 1 GEN virtual reward, passing score `80`,
+and terms hash
+`8791e92f53a8caaba8e170f7936e6ca1f657f1ea6501ab65ed859778e79b2120`.
 
-Frontend tests verify that missing v2 deployment disables writes, failed live
-reads show UNVERIFIED, retry submits the correct method/address through the
-mock wallet, and failed execution is never reported as successful settlement.
-These are DOM integration tests, not a real MetaMask end-to-end run.
+| Action | Transaction | Result |
+| --- | --- | --- |
+| Create/fund | `0x150bf70c56b1946ae06595d9462098d1baca7b6c05afa7ea5be267ae3956f4ba` | `FINALIZED` |
+| Provider accept | `0x20174ba95dd1a1391c04ab923c26a3613169df8ef596376087cc4e8096c6e27a` | `FINALIZED` |
+| Submit | `0x98fed8fdd3d8197315a06d75e1626a9fa068135d9e7927c9a741ce97c911d8ef` | `FINALIZED` |
+| Review | `0x73d99219ef0e142e5d7659e71b88bc9c9a2ec0e9572aabae6d93448d1ae1bed6` | `FINALIZED` |
+| Finalize | `0x0266239d1de25a501b3337e87bab7096756746f47717e3e226f504cf2de33c6d` | `FINALIZED` |
 
-## Historical evidence integrity
+Observed result before settlement: `SATISFIED`, score `92`, `settled: false`,
+one review attempt. After settlement: `PAID`, `settled: true`. Studio displayed
+provider balance `1 GEN`, up from `0 GEN`, and requester balance `8 GEN`.
 
-Source snapshot reviewed:
-[c1be08f8c1f2f1e2598361a9d358a879f6ca385d](https://github.com/amzar1st/agentsla-demo/tree/c1be08f8c1f2f1e2598361a9d358a879f6ca385d).
-The uploaded final Python file had equivalent code to that snapshot (only a
-trailing newline differed). The historical source remains available at that
-commit; root source now intentionally differs.
+Artifacts were immutable commit URLs:
 
 - `report.json`: `033ee9d4c7ba59f2afb41d239edad0067a5be963dbfcb457f4889b6eaed33abb`
 - `EVIDENCE.md`: `b9fbe4eed335704a9e42ea12351add509d9f6b76fea9bafb9ebbb72316426517`
 
-The bytes of both artifacts are preserved unchanged by this update.
-Matching repository digests confirms file integrity, not that the live validators
-used those bytes or paid the provider.
+## Evidence failure protection
 
-## Live proof access limitations
+SLA `agentsla-v2-outage-001` submitted the correct report commitment and a
+deliberately mismatched evidence digest. Its review transaction
+`0xa330ca8a6f90832b45a32adfd7f684d7e77c9c9810948c5d8964133cb37b09e2`
+finalized. `get_result` returned:
 
-The explorer URLs for the reported consensus and settlement transactions could
-not be opened by the web tool. A direct JSON-RPC request to the Studionet API
-could not complete because network approval was cancelled. No RPC receipt or
-finalized state was returned. The live Netlify page was also unavailable through
-the web tool. These access failures do not establish transaction or website failure.
+```json
+{
+  "status": "EVIDENCE_REVIEW",
+  "verdict": "EVIDENCE_REVIEW",
+  "score": 0,
+  "settled": false,
+  "review_attempts": 1,
+  "review_deadline": 1788862837,
+  "evidence_retry_deadline": 1788949237,
+  "summary": "The evidence bytes do not match the submitted SHA-256 digest."
+}
+```
 
-The previous 95/100, SATISFIED and payment claims remain explicitly historical
-and unverified in this review. No transaction was signed and no new contract
-was deployed. Follow [V2_RUNBOOK.md](V2_RUNBOOK.md) to close these gaps.
+The retry deadline difference is exactly 86,400 seconds. No payment or refund
+was emitted by the protected review.
+
+## Refund proof
+
+SLA `agentsla-v2-refund-001` was created in
+`0x29d15b85547d8ec47ae569d07755992060077e8db381de05dd9162386e36d1b7`
+and cancelled before acceptance in
+`0x43cd452edcfbd2604ffbde26e1e2dd7d46913826b30ff397ace56b1cab5c0710`.
+Both finalized. Result: `CANCELLED`, `settled: true`; requester balance returned
+to `7 GEN` after the temporary escrow.
+
+## Authorization proof
+
+On the first deployed v2 build, the requester attempted the provider-only
+`accept_sla` action in transaction
+`0x632ec7645a3a6f6bf03a72c83a34260cfd0512d85d9dab260076467fdaf7e06b`.
+A subsequent `get_result` remained `OPEN` with no acceptance timestamp or
+review attempt. The assigned provider then accepted successfully.
+
+## Consensus correction discovered during live testing
+
+The first v2 review transaction
+`0xb336cc57f6883ef1f06ba5b60ab46d0c76fda5a4d42d9f5c65a3e307fb1ec530`
+ended `UNDETERMINED`. The validator compared both categorical verdict and a
+numeric score tolerance. Independent LLM scores can vary even when the
+settlement decision agrees. The deployed correction compares authenticated
+artifact results and the settlement-critical categorical verdict; numeric
+score differences are explanatory and do not block consensus. The repeated
+Full Consensus review then finalized successfully at `92/100`.
+
+## Automated verification
+
+The updated suite contains 17 direct contract tests and 6 frontend integration
+tests. It covers evidence unavailability/mismatch/recovery, fixed deadlines,
+authorization, payout/refund recipients, duplicate settlement, categorical
+validator disagreement, accepted score variance, protocol gating, wallet
+writes, failed execution, and zero reward validation.
+
+The prior commit `a586b0df3503914cc7816d75fc457148f7efff01` passed 16 contract tests,
+4 frontend tests, three GenVM lint checks, and a production build in
+GitHub Actions run `33949637901`. A new CI result for the corrected source is
+recorded here after GitHub finishes the pushed workflow.
+
+## Verification boundary
+
+Live tests used Studio-generated ephemeral accounts and virtual Studionet GEN:
+
+- Requester: `0xF889240e6Fa88D88d81ef1b36f55962Ca61f84e7`
+- Provider: `0x022C28fF8296096a22457bFe82c9f91B53934F0f`
+
+No MetaMask, owner wallet, private key, real-value token, or Bradbury/Mainnet
+transaction was used. The observed Studio transactions and balance changes are
+live sandbox proof within that boundary.

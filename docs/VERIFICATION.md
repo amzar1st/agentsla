@@ -109,10 +109,13 @@ authorization, payout/refund recipients, duplicate settlement, categorical
 validator disagreement, accepted score variance, protocol gating, wallet
 writes, failed execution, and zero reward validation.
 
-The prior commit `a586b0df3503914cc7816d75fc457148f7efff01` passed 16 contract tests,
-4 frontend tests, three GenVM lint checks, and a production build in
-GitHub Actions run `33949637901`. A new CI result for the corrected source is
-recorded here after GitHub finishes the pushed workflow.
+Corrected source commit `797545924915b507f999907f597e7d65c0c37d93`
+passed the complete GitHub Actions gate in run
+[`34113048475`](https://github.com/amzar1st/agentsla-demo/actions/runs/34113048475),
+job `101713442312`: three GenVM lint checks passed, 17 direct contract tests
+passed, all 6 frontend tests passed with zero failures, and the Vite 8.2.2
+production build completed. Vite reported only its non-blocking bundle-size
+advisory.
 
 ## Verification boundary
 

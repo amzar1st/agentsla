@@ -84,14 +84,14 @@ latest-final state `OPEN`, both committed authority URLs, `settled: false`,
 ## 07 — Project links
 
 - Website: https://agentsla.amzar1st96.chatgpt.site
-- GitHub: https://github.com/amzar1st/agentsla-demo
+- GitHub: https://github.com/amzar1st/agentsla
 
 ## Evidence links
 
 Add each as URL evidence:
 
-1. Repository: https://github.com/amzar1st/agentsla-demo
-2. Steward response: https://github.com/amzar1st/agentsla-demo/blob/main/SUBMISSION_EVIDENCE.md
+1. Repository: https://github.com/amzar1st/agentsla
+2. Steward response: https://github.com/amzar1st/agentsla/blob/main/SUBMISSION_EVIDENCE.md
 3. V3 contract: https://explorer-studio.genlayer.com/address/0xd8647B3A24f2973F29A5fC1822832c87E1398BA3
 4. V3 deployment: https://explorer-studio.genlayer.com/tx/0x17306034c538e49a53fc318283f1b3f5b44291e604a71c046693126b5ecc13c8
 5. Wallet Create SLA: https://explorer-studio.genlayer.com/tx/0x02f741b46fa79954bc2fcc3f2ed566a7858758ab076b4cfe1d8cb5f1d46d5ac0

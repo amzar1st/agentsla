@@ -1,103 +1,155 @@
-# Agentsla v2 submission evidence
+# Agentsla v3 submission evidence
 
-This is the reviewer-facing trail for the verified Agentsla Studionet demo.
+This document answers the September 8, 2026 steward request with a new v3
+deployment, a supported GenLayerJS wallet write, and the resulting latest-final
+on-chain read.
 
-## Project
+## Steward request → verified response
 
-Agentsla is an AI agent-to-agent service escrow. A requester funds immutable
-natural-language terms, the named provider accepts their exact hash, and the
-provider submits public deliverable/evidence URLs with SHA-256 commitments.
-GenLayer validators authenticate those bytes and judge fulfillment before
-deterministic settlement.
-
-## Live project
-
-- Public app: https://agentsla.amzar1st96.chatgpt.site
-- Repository: https://github.com/amzar1st/agentsla-demo
-- Network: GenLayer Studionet (`61999`)
-- Contract: https://explorer-studio.genlayer.com/address/0x635c282A6A6F57521783b4C7C420bB9bC5BB34F4
-- Deployed source SHA-256: `5ff8f456632cfda7b55e4d1f0e450a677993a905824e8c2b39ba67050a13de5b`
-
-## Deployment
-
-- Tx: https://explorer-studio.genlayer.com/tx/0xd70adeed1dded35bb62a71e9d58d3563dd40931ea5318ba2f623f410ea0c54d9
-- Result: `FINALIZED`
-- `get_protocol_version()`: `"2"`
-
-## Canonical successful SLA
-
-- SLA ID: `agentsla-v2-verified-002`
-- Terms hash: `8791e92f53a8caaba8e170f7936e6ca1f657f1ea6501ab65ed859778e79b2120`
-- Passing score: `80`
-- Reward: `1 GEN` virtual Studionet funds
-- Requester: `0xF889240e6Fa88D88d81ef1b36f55962Ca61f84e7`
-- Provider: `0x022C28fF8296096a22457bFe82c9f91B53934F0f`
-
-| Step | Finalized transaction |
+| Requested correction | Implemented and verified |
 | --- | --- |
-| Create and escrow | https://explorer-studio.genlayer.com/tx/0x150bf70c56b1946ae06595d9462098d1baca7b6c05afa7ea5be267ae3956f4ba |
-| Provider accepts exact terms | https://explorer-studio.genlayer.com/tx/0x20174ba95dd1a1391c04ab923c26a3613169df8ef596376087cc4e8096c6e27a |
-| Submit hash-bound artifacts | https://explorer-studio.genlayer.com/tx/0x98fed8fdd3d8197315a06d75e1626a9fa068135d9e7927c9a741ce97c911d8ef |
-| Normal / Full Consensus review | https://explorer-studio.genlayer.com/tx/0x73d99219ef0e142e5d7659e71b88bc9c9a2ec0e9572aabae6d93448d1ae1bed6 |
-| Finalize provider payout | https://explorer-studio.genlayer.com/tx/0x0266239d1de25a501b3337e87bab7096756746f47717e3e226f504cf2de33c6d |
+| Replace broken fee helper | Frontend pins `genlayer-js@1.1.8` and calls `writeContract`, whose supported path invokes `estimateTransactionGas` |
+| New wallet-originated Create SLA | Finalized transaction `0x02f741…d46d5ac0` from an ephemeral SDK wallet |
+| On-chain read | `get_result`, `get_sla`, and `get_terms_hash` read from `LATEST_FINAL` |
+| Requester counter-evidence | One requester-only SHA-256-bound submission during a fixed challenge window |
+| Challenge window | Review is rejected until the immutable challenge deadline closes |
+| Authoritative sources per SLA | Two distinct HTTPS authority URLs and SHA-256 commitments are immutable terms |
+| Scores only if validators agree | V3 does not collect or expose a numeric score; settlement uses only an exact validator-agreed categorical verdict |
+| Temporary evidence outage | Any required artifact outage, HTTP error, oversize, or hash mismatch enters protected `EVIDENCE_REVIEW`; escrow remains locked |
 
-Before settlement, `get_result` returned:
+## Canonical deployment
+
+- Network: GenLayer Studionet, chain ID `61999`
+- Contract: https://explorer-studio.genlayer.com/address/0xd8647B3A24f2973F29A5fC1822832c87E1398BA3
+- Deployment transaction: https://explorer-studio.genlayer.com/tx/0x17306034c538e49a53fc318283f1b3f5b44291e604a71c046693126b5ecc13c8
+- Deployment state: `FINALIZED`
+- Creator: `0x41b36C6B5cCcf9D7d5Dc09d6d2B132986FdE48e8`
+- Studio execution mode: Normal (Full Consensus)
+- `get_protocol_version()`: `"3"` from finalized state
+- Repository source SHA-256: `56db37c05044c6478206e7dc16cb9498faee5369738a1eae065da7fbc1d21d1f`
+
+## Canonical wallet-created SLA
+
+- SLA ID: `agentsla-v3-wallet-001`
+- Create transaction: https://explorer-studio.genlayer.com/tx/0x02f741b46fa79954bc2fcc3f2ed566a7858758ab076b4cfe1d8cb5f1d46d5ac0
+- Requester: https://explorer-studio.genlayer.com/address/0xd0834084e353E5E825D55466967956349Bc60E17
+- Provider: `0x41b36C6B5cCcf9D7d5Dc09d6d2B132986FdE48e8`
+- Value: `0.10 GEN` virtual Studionet escrow
+- Terms hash: `ba6518f2f16a2fb3476a6df9ffe6add1eb53d048988e203c66bb168edc129507`
+- Created: September 9, 2026 at 06:05:01 UTC
+- Finalized: September 9, 2026 at 06:05:38 UTC
+
+The explorer independently shows:
+
+| Field | Observed value |
+| --- | --- |
+| Type / method | `Call / create_sla` |
+| Status | `FINALIZED` |
+| GenVM execution | `SUCCESS`, return value `null`, empty stdout/stderr |
+| Consensus | `Accepted` |
+| Execution mode | `Normal` |
+| Initial validators | `5` |
+| Rotation count | `0` |
+| Escrow value | `0.10 GEN` |
+
+The SDK receipt also reported `status_name: FINALIZED`,
+`result_name: MAJORITY_AGREE`, leader `execution_result: SUCCESS`, and five
+`AGREE` validator votes.
+
+## Exact wallet-write path
+
+The proof runner is `frontend/scripts/create-studionet-proof.mjs`. It:
+
+1. creates a new local wallet in process memory with `createAccount()`;
+2. requests virtual Studionet faucet funds for that address;
+3. calls `client.writeContract({ functionName: "create_sla", ... })`;
+4. lets GenLayerJS invoke its supported `estimateTransactionGas` path;
+5. signs locally and submits the raw transaction;
+6. waits for `TransactionStatus.FINALIZED`; and
+7. reads `get_result`, `get_sla`, and `get_terms_hash` with
+   `TransactionHashVariant.LATEST_FINAL`.
+
+The generated private key was never printed, saved, committed, or connected to
+the website. Only virtual Studionet GEN was used. The production browser path
+uses the same pinned SDK `writeContract` flow with an injected EIP-1193 wallet.
+
+## Immutable authority sources
+
+The proof SLA binds the official `genlayerlabs/genlayer-js` v1.1.8 release
+commit `4303db00c428d57c6d8e5b04a75043ea42d4b0e7`:
+
+| Authority | SHA-256 |
+| --- | --- |
+| https://raw.githubusercontent.com/genlayerlabs/genlayer-js/4303db00c428d57c6d8e5b04a75043ea42d4b0e7/README.md | `76f02a57d11db0541b0d0151f9caaae3a922b4ed332afe0e0621b898676be279` |
+| https://raw.githubusercontent.com/genlayerlabs/genlayer-js/4303db00c428d57c6d8e5b04a75043ea42d4b0e7/package.json | `bdb0b9a86827b392ad9b584a52158bf7b90ef9e4425e009f1f5c8a8d0e6f3662` |
+
+The explorer's decoded input displays both URLs, both hashes, and all 13 v3
+arguments.
+
+## Latest-final on-chain read
+
+`get_result("agentsla-v3-wallet-001")` returned:
 
 ```json
 {
-  "status": "SATISFIED",
-  "verdict": "SATISFIED",
-  "score": 92,
+  "authority_url_one": "https://raw.githubusercontent.com/genlayerlabs/genlayer-js/4303db00c428d57c6d8e5b04a75043ea42d4b0e7/README.md",
+  "authority_url_two": "https://raw.githubusercontent.com/genlayerlabs/genlayer-js/4303db00c428d57c6d8e5b04a75043ea42d4b0e7/package.json",
+  "challenge_deadline": 0,
+  "counter_evidence_submitted": false,
+  "evidence_retry_deadline": 0,
+  "review_attempts": 0,
+  "review_deadline": 0,
+  "score_policy": "NOT_COLLECTED_OR_USED_FOR_SETTLEMENT",
   "settled": false,
-  "review_attempts": 1
+  "settlement_basis": "VALIDATOR_AGREED_CATEGORICAL_VERDICT",
+  "status": "OPEN",
+  "summary": "",
+  "verdict": ""
 }
 ```
 
-The consensus summary reported exactly five incidents, all required fields,
-two or more credible sources per incident, and correct labeling of unverified
-attacker claims. After settlement, `get_result` returned `PAID` and
-`settled: true`. Studio displayed requester `8 GEN` and provider `1 GEN`; the
-provider had displayed `0 GEN` before the payout.
+Selected values from `get_sla("agentsla-v3-wallet-001")`:
 
-## Exact provider artifacts
+```json
+{
+  "requester": "0xd0834084e353e5e825d55466967956349bc60e17",
+  "provider": "0x41b36c6b5cccf9d7d5dc09d6d2b132986fde48e8",
+  "reward": "100000000000000000",
+  "status": "OPEN",
+  "created_at": 1788914101,
+  "acceptance_deadline": 1789000501,
+  "submission_window_seconds": 86400,
+  "challenge_window_seconds": 3600,
+  "authority_hash_one": "76f02a57d11db0541b0d0151f9caaae3a922b4ed332afe0e0621b898676be279",
+  "authority_hash_two": "bdb0b9a86827b392ad9b584a52158bf7b90ef9e4425e009f1f5c8a8d0e6f3662",
+  "terms_hash": "ba6518f2f16a2fb3476a6df9ffe6add1eb53d048988e203c66bb168edc129507"
+}
+```
 
-- Deliverable URL: `https://raw.githubusercontent.com/amzar1st/agentsla-demo/a586b0df3503914cc7816d75fc457148f7efff01/report.json`
-- Deliverable SHA-256: `033ee9d4c7ba59f2afb41d239edad0067a5be963dbfcb457f4889b6eaed33abb`
-- Evidence URL: `https://raw.githubusercontent.com/amzar1st/agentsla-demo/a586b0df3503914cc7816d75fc457148f7efff01/EVIDENCE.md`
-- Evidence SHA-256: `b9fbe4eed335704a9e42ea12351add509d9f6b76fea9bafb9ebbb72316426517`
+The 86,400-second acceptance interval exactly matches the committed input.
 
-The commit-pinned URLs keep the reviewed bytes immutable.
+## Automated verification
 
-## Evidence-failure protection
+Verified locally on September 9, 2026:
 
-SLA `agentsla-v2-outage-001` used the same correct deliverable and a deliberately
-wrong 64-character evidence hash.
+- GenVM lint: 3 checks passed
+- Direct contract tests: 23 passed
+- Frontend integration tests: 9 passed
+- Vite production build: passed
 
-| Step | Finalized transaction |
-| --- | --- |
-| Create | https://explorer-studio.genlayer.com/tx/0x1dd6f07df83d15d044aab086bab4f4453a5a4dd21d385d954999d449f278bdb4 |
-| Provider accept | https://explorer-studio.genlayer.com/tx/0x43131387eedab2f19fce44ec747f7afeda501ffc5a5c4c426c346be16b9cf55b |
-| Submit mismatch | https://explorer-studio.genlayer.com/tx/0x64eed2b154bfbd39b3c83717c11e86154cf24f4e91dfce684be8fad50d00bf01 |
-| Protected review | https://explorer-studio.genlayer.com/tx/0xa330ca8a6f90832b45a32adfd7f684d7e77c9c9810948c5d8964133cb37b09e2 |
+Coverage includes evidence mismatch and outages for every required artifact,
+recovery without deadline extension, requester-only counter-evidence,
+challenge timing, authority validation, unauthorized actions, exact terms,
+payout/refund recipients, timeouts, cancellation, duplicate settlement,
+validator disagreement, protocol gating, the actual v1.1.8 simplified receipt
+shape, and zero-value rejection.
 
-Observed result: `EVIDENCE_REVIEW`, score `0`, `settled: false`, summary
-`The evidence bytes do not match the submitted SHA-256 digest.` The retry
-deadline was exactly `review_deadline + 86400`. This proves evidence failure
-does not decide service failure or immediately release escrow.
+## Verification boundary
 
-## Refund proof
+This is public Studionet sandbox evidence. The transaction, decoded input,
+validator votes, source, and contract reads are independently inspectable.
+Studionet GEN has no real value. The proof does not claim a Mainnet/Bradbury
+deployment or use a personal wallet.
 
-SLA `agentsla-v2-refund-001` was created and then cancelled by its requester
-before provider acceptance:
-
-- Create: https://explorer-studio.genlayer.com/tx/0x29d15b85547d8ec47ae569d07755992060077e8db381de05dd9162386e36d1b7
-- Cancel/refund: https://explorer-studio.genlayer.com/tx/0x43cd452edcfbd2604ffbde26e1e2dd7d46913826b30ff397ace56b1cab5c0710
-- Final state: `CANCELLED`, `settled: true`
-- Requester balance returned to `7 GEN` after the temporary 1 GEN escrow.
-
-## Scope of proof
-
-These are live Studio transactions using ephemeral built-in accounts and
-virtual Studionet GEN. They independently verify the sandbox contract workflow
-and account balance changes. They do not claim an owner-wallet or real-value
-Bradbury/Mainnet transaction.
+Historical v1/v2 score-based transactions are intentionally excluded from the
+v3 evidence set.

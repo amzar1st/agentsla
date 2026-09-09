@@ -1,61 +1,86 @@
-# Agentsla v2 deployment
+# Agentsla v3 deployment
 
-## Network and application
+## Canonical deployment
 
-- Network: GenLayer Studionet
-- Chain ID: `61999`
-- Public app: `https://agentsla.amzar1st96.chatgpt.site`
-- Repository: `https://github.com/amzar1st/agentsla-demo`
+| Item | Value |
+| --- | --- |
+| Network | GenLayer Studionet |
+| Chain ID | `61999` |
+| Contract | `0xd8647B3A24f2973F29A5fC1822832c87E1398BA3` |
+| Deployment tx | `0x17306034c538e49a53fc318283f1b3f5b44291e604a71c046693126b5ecc13c8` |
+| Status | `FINALIZED` |
+| Execution mode | Normal (Full Consensus) |
+| Creator | `0x41b36C6B5cCcf9D7d5Dc09d6d2B132986FdE48e8` |
+| Protocol read | `get_protocol_version() == "3"` |
+| Source SHA-256 | `56db37c05044c6478206e7dc16cb9498faee5369738a1eae065da7fbc1d21d1f` |
 
-## Canonical contract
+- Explorer: https://explorer-studio.genlayer.com/address/0xd8647B3A24f2973F29A5fC1822832c87E1398BA3
+- Deployment: https://explorer-studio.genlayer.com/tx/0x17306034c538e49a53fc318283f1b3f5b44291e604a71c046693126b5ecc13c8
+- Public app: https://agentsla.amzar1st96.chatgpt.site
 
-- Address: `0x635c282A6A6F57521783b4C7C420bB9bC5BB34F4`
-- Deployment tx: `0xd70adeed1dded35bb62a71e9d58d3563dd40931ea5318ba2f623f410ea0c54d9`
-- Source SHA-256: `5ff8f456632cfda7b55e4d1f0e450a677993a905824e8c2b39ba67050a13de5b`
-- Source size: 25,693 bytes
-- `get_protocol_version()`: `"2"`
+## Wallet-write verification
 
-Studio parsed the source as `agentsla_v2_1.py`, exposed the expected constructor
-and six read/eight write methods, and finalized the deployment under Normal
-(Full Consensus) execution mode.
+The canonical post-deployment write was made through `genlayer-js@1.1.8`
+using an ephemeral local wallet, not the removed fee helper.
 
-## Canonical successful SLA
+| Item | Value |
+| --- | --- |
+| SLA ID | `agentsla-v3-wallet-001` |
+| Create tx | `0x02f741b46fa79954bc2fcc3f2ed566a7858758ab076b4cfe1d8cb5f1d46d5ac0` |
+| Requester | `0xd0834084e353E5E825D55466967956349Bc60E17` |
+| Provider | `0x41b36C6B5cCcf9D7d5Dc09d6d2B132986FdE48e8` |
+| Escrow | `0.10 GEN` virtual Studionet funds |
+| Explorer status | `FINALIZED` |
+| GenVM result | `SUCCESS` |
+| Consensus | `Accepted`; five validator votes `AGREE` |
+| Terms hash | `ba6518f2f16a2fb3476a6df9ffe6add1eb53d048988e203c66bb168edc129507` |
 
-- SLA ID: `agentsla-v2-verified-002`
-- Terms hash: `8791e92f53a8caaba8e170f7936e6ca1f657f1ea6501ab65ed859778e79b2120`
-- Passing score: `80`
-- Reward: `1 GEN` (virtual Studionet funds)
-- Create: `0x150bf70c56b1946ae06595d9462098d1baca7b6c05afa7ea5be267ae3956f4ba`
-- Provider accept: `0x20174ba95dd1a1391c04ab923c26a3613169df8ef596376087cc4e8096c6e27a`
-- Submit work: `0x98fed8fdd3d8197315a06d75e1626a9fa068135d9e7927c9a741ce97c911d8ef`
-- Full Consensus review: `0x73d99219ef0e142e5d7659e71b88bc9c9a2ec0e9572aabae6d93448d1ae1bed6`
-- Finalize payout: `0x0266239d1de25a501b3337e87bab7096756746f47717e3e226f504cf2de33c6d`
-- Result: `SATISFIED`, score `92`, then `PAID`, `settled: true`
+Transaction:
+https://explorer-studio.genlayer.com/tx/0x02f741b46fa79954bc2fcc3f2ed566a7858758ab076b4cfe1d8cb5f1d46d5ac0
 
-Immediately after settlement, Studio displayed requester balance `8 GEN` and
-provider balance `1 GEN`, up from `0 GEN` for the provider.
+The write used the SDK sequence:
 
-## Protected evidence case
+1. `createAccount()` creates a one-use signer in memory.
+2. Studionet supplies virtual faucet funds.
+3. `writeContract` encodes `create_sla`.
+4. GenLayerJS calls `estimateTransactionGas`.
+5. The wallet signs and submits the transaction.
+6. `waitForTransactionReceipt` waits for `FINALIZED`.
+7. Three `LATEST_FINAL` reads verify the canonical record.
 
-SLA `agentsla-v2-outage-001` used a correct deliverable commitment and a
-deliberately mismatched evidence digest. Review tx
-`0xa330ca8a6f90832b45a32adfd7f684d7e77c9c9810948c5d8964133cb37b09e2`
-finalized with `EVIDENCE_REVIEW`, score `0`, `settled: false`, and
-`evidence_retry_deadline = review_deadline + 86400`.
+The production frontend uses the same `writeContract` method with
+`window.ethereum`, then validates both the documented high-level receipt
+shape and the snake_case simplified receipt actually returned by v1.1.8.
 
-## Refund case
+## V3 protocol behavior
 
-SLA `agentsla-v2-refund-001` was created in tx
-`0x29d15b85547d8ec47ae569d07755992060077e8db381de05dd9162386e36d1b7`
-and cancelled before acceptance in tx
-`0x43cd452edcfbd2604ffbde26e1e2dd7d46913826b30ff397ace56b1cab5c0710`.
-Final state was `CANCELLED`, `settled: true`; requester balance returned to
-`7 GEN` after the temporary 1 GEN escrow.
+- Immutable terms include task, requirements, evidence requirements, two
+  authority URL/hash pairs, reward, and all deadlines.
+- Provider submission opens a fixed requester challenge window.
+- Only the requester can submit one counter-evidence URL/hash pair.
+- Review cannot run before the challenge deadline.
+- Provider work, provider evidence, optional requester evidence, and both
+  authority sources must be available, size-bounded, and SHA-256 authentic.
+- Any outage, HTTP failure, oversize, or mismatch enters `EVIDENCE_REVIEW`;
+  escrow remains locked for an absolute retry period.
+- Numeric scores are not collected. Validators must agree on the categorical
+  verdict that drives settlement.
+- `SATISFIED` pays only the provider; `UNSATISFIED` refunds only the
+  requester.
 
-## Test accounts
+## Verification commands
 
-- Requester: `0xF889240e6Fa88D88d81ef1b36f55962Ca61f84e7`
-- Provider: `0x022C28fF8296096a22457bFe82c9f91B53934F0f`
+```bash
+genvm-lint agentsla.py
+python -m pytest -q tests/direct/test_agentsla.py
+cd frontend
+npm ci
+npm test
+npm run build
+```
 
-These were ephemeral accounts generated by GenLayer Studio. No MetaMask or
-owner wallet was connected, and no real-value funds were used.
+Observed September 9, 2026: 3 lint checks, 23 contract tests, and 9 frontend
+tests passed; the Vite production build completed successfully.
+
+No personal wallet, seed phrase, private key file, or real-value token was
+used. Historical v1/v2 deployments are not used by the public app.

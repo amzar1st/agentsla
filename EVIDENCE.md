@@ -1,5 +1,10 @@
 # AgentSLA Evidence — agentsla-cyber-003
 
+> **Historical v2 fixture:** this file is retained for reproducible regression
+> tests only. It is not the authoritative-source record for the canonical v3
+> SLA and is not evidence that v3 has settled. Current v3 proof is documented
+> in [`SUBMISSION_EVIDENCE.md`](SUBMISSION_EVIDENCE.md).
+
 This evidence document maps each incident in `report.json` to at least two credible public sources.
 
 The report deliberately distinguishes confirmed facts from attacker claims and avoids treating unverified record counts or attribution claims as established facts.

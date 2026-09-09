@@ -1,46 +1,109 @@
-# Agentsla — submission details
+# Agentsla — Project Explorer submission
 
-## Project name
+Use these values for the corrected September 2026 resubmission.
 
-Agentsla
+## 01 — Identity
 
-## Primary tag
+- Project name: **Agentsla**
+- Primary tag: **AI & Agents**
+- Suggested topics: **Agent Infrastructure**, **Escrow**
+- Logo: `AgentSLA_logo.png`
 
-AI Agents
+## 02 — One-liner (180 characters maximum)
 
-## Description (under 1,000 characters)
+Two-sided escrow for AI-agent services, with hash-bound evidence, a requester
+challenge window, and validator-agreed settlement on GenLayer.
+
+## 03 — Description (1,000 characters maximum)
 
 Agentsla is a GenLayer escrow protocol for agreements between AI agents. A
-requester funds immutable natural-language service terms, and the named
-provider must accept their exact hash before submitting public deliverables and
-evidence with SHA-256 commitments. GenLayer validators independently retrieve
-the authenticated artifacts and judge whether the service requirements were
-fulfilled. Deterministic contract logic then pays the provider or refunds the
-requester. Temporary evidence outages, HTTP failures, oversized files, and hash
-mismatches enter a protected EVIDENCE_REVIEW state instead of deciding failure;
-either party can retry within a fixed deadline that cannot be extended by
-repeated outages. The public app supports finalized reads and every lifecycle
-write through GenLayerJS. A live Studionet demo reached SATISFIED at 92/100,
-paid the provider, held escrow on an evidence mismatch, and completed a
-requester refund.
+requester locks GEN under immutable service terms, names the provider, and
+binds two authoritative HTTPS sources by SHA-256. The provider accepts the
+exact terms and submits hash-bound work and evidence. A fixed challenge window
+then lets only the requester add counter-evidence before review. Validators
+authenticate every required artifact and must agree on a categorical
+SATISFIED or UNSATISFIED verdict; numeric scores are not collected or used for
+settlement. Temporary outages, HTTP errors, oversized responses, or hash
+mismatches enter EVIDENCE_REVIEW and keep escrow locked for retry under an
+absolute deadline. SATISFIED pays only the provider; UNSATISFIED refunds only
+the requester. The public app reads latest-final state and sends lifecycle
+writes through the supported GenLayerJS 1.1.8 wallet path.
 
-## Links
+## 04 — Demo video
+
+Optional. Leave blank unless a current v3 walkthrough is recorded; do not use
+the old score-based v2 video.
+
+## 05 — Exact how-to path
+
+### 1. Verify the canonical deployment
+
+Open the v3 contract link and confirm the deployment and protocol read are
+finalized on Studionet.
+
+### 2. Verify the wallet-originated Create SLA
+
+Open the Create SLA transaction. Confirm method `create_sla`, status
+`FINALIZED`, GenVM `SUCCESS`, consensus `Accepted`, requester
+`0xd0834084e353E5E825D55466967956349Bc60E17`, and value `0.10 GEN`.
+
+### 3. Read canonical state in the app
+
+Open the website and select **Refresh on-chain result**. Confirm SLA
+`agentsla-v3-wallet-001` reads `OPEN` from the v3
+contract and shows the two authority sources.
+
+### 4. Inspect the two-sided evidence model
+
+Open the repository and inspect `agentsla.py`. Confirm requester-only
+`submit_counter_evidence`, a fixed challenge deadline, two authority URL/hash
+pairs, protected `EVIDENCE_REVIEW`, and categorical-only settlement.
+
+### 5. Reproduce the supported write path
+
+From `frontend`, run `npm ci`, choose a fresh `AGENTSLA_PROOF_ID`, and run
+`npm run proof:create`. The script creates an ephemeral SDK wallet, obtains
+virtual Studionet funds, writes through GenLayerJS, waits for finalization, and
+prints latest-final reads without exposing the private key.
+
+## 06 — Expected verification outcome (500 characters maximum)
+
+The v3 deployment and Create SLA transaction are FINALIZED on Studionet. The
+Create call shows GenVM SUCCESS and Accepted consensus from the ephemeral
+requester for 0.10 GEN. Loading `agentsla-v3-wallet-001` returns canonical
+latest-final state `OPEN`, both committed authority URLs, `settled: false`,
+`score_policy: NOT_COLLECTED_OR_USED_FOR_SETTLEMENT`, and
+`settlement_basis: VALIDATOR_AGREED_CATEGORICAL_VERDICT`.
+
+## 06 — Contract links
+
+1. https://explorer-studio.genlayer.com/address/0xd8647B3A24f2973F29A5fC1822832c87E1398BA3
+2. https://explorer-studio.genlayer.com/tx/0x17306034c538e49a53fc318283f1b3f5b44291e604a71c046693126b5ecc13c8
+3. https://explorer-studio.genlayer.com/tx/0x02f741b46fa79954bc2fcc3f2ed566a7858758ab076b4cfe1d8cb5f1d46d5ac0
+
+## 07 — Project links
 
 - Website: https://agentsla.amzar1st96.chatgpt.site
-- Repository: https://github.com/amzar1st/agentsla-demo
-- Contract: https://explorer-studio.genlayer.com/address/0x635c282A6A6F57521783b4C7C420bB9bC5BB34F4
-- Deployment: https://explorer-studio.genlayer.com/tx/0xd70adeed1dded35bb62a71e9d58d3563dd40931ea5318ba2f623f410ea0c54d9
-- Full Consensus review: https://explorer-studio.genlayer.com/tx/0x73d99219ef0e142e5d7659e71b88bc9c9a2ec0e9572aabae6d93448d1ae1bed6
-- Provider payout: https://explorer-studio.genlayer.com/tx/0x0266239d1de25a501b3337e87bab7096756746f47717e3e226f504cf2de33c6d
-- Evidence protection: https://explorer-studio.genlayer.com/tx/0xa330ca8a6f90832b45a32adfd7f684d7e77c9c9810948c5d8964133cb37b09e2
-- Refund: https://explorer-studio.genlayer.com/tx/0x43cd452edcfbd2604ffbde26e1e2dd7d46913826b30ff397ace56b1cab5c0710
+- GitHub: https://github.com/amzar1st/agentsla-demo
 
-## Verified demo
+## Evidence links
 
-- SLA: `agentsla-v2-verified-002`
-- Result: `SATISFIED`, score `92/100`, then `PAID`
-- Evidence-failure result: `EVIDENCE_REVIEW`, `settled: false`
-- Refund result: `CANCELLED`, `settled: true`
+Add each as URL evidence:
 
-Testing used GenLayer Studio's built-in sandbox accounts and virtual Studionet
-GEN. No MetaMask or personal wallet was connected.
+1. Repository: https://github.com/amzar1st/agentsla-demo
+2. Steward response: https://github.com/amzar1st/agentsla-demo/blob/main/SUBMISSION_EVIDENCE.md
+3. V3 contract: https://explorer-studio.genlayer.com/address/0xd8647B3A24f2973F29A5fC1822832c87E1398BA3
+4. V3 deployment: https://explorer-studio.genlayer.com/tx/0x17306034c538e49a53fc318283f1b3f5b44291e604a71c046693126b5ecc13c8
+5. Wallet Create SLA: https://explorer-studio.genlayer.com/tx/0x02f741b46fa79954bc2fcc3f2ed566a7858758ab076b4cfe1d8cb5f1d46d5ac0
+6. Public app: https://agentsla.amzar1st96.chatgpt.site
+
+## Steward resubmission note
+
+The September 8 request is addressed in v3. The broken pre-signature fee call
+has been removed: the app and reproducible proof pin GenLayerJS 1.1.8 and use
+its supported `writeContract` / `estimateTransactionGas` path. A new
+wallet-originated Create SLA is finalized and linked above, with its exact
+latest-final read recorded in `SUBMISSION_EVIDENCE.md`. V3 also adds
+requester-only counter-evidence, a fixed challenge window, two immutable
+authoritative sources per SLA, and categorical validator-agreed settlement.
+Numeric scores are not collected or used.

@@ -1,16 +1,20 @@
 import './styles.css';
 import { createClient } from 'genlayer-js';
 import { studionet } from 'genlayer-js/chains';
-import { TransactionHashVariant } from 'genlayer-js/types';
+import {
+  ExecutionResult,
+  TransactionHashVariant,
+  TransactionStatus,
+} from 'genlayer-js/types';
 
-const DEFAULT_CONTRACT_ADDRESS = '0x635c282A6A6F57521783b4C7C420bB9bC5BB34F4';
-const configuredAddress = import.meta.env.VITE_AGENTSLA_V2_ADDRESS?.trim() || DEFAULT_CONTRACT_ADDRESS;
+const DEFAULT_CONTRACT_ADDRESS = '0xd8647B3A24f2973F29A5fC1822832c87E1398BA3';
+const configuredAddress = import.meta.env.VITE_AGENTSLA_V3_ADDRESS?.trim() || DEFAULT_CONTRACT_ADDRESS;
 if (configuredAddress && !/^0x[a-fA-F0-9]{40}$/.test(configuredAddress)) {
-  throw new Error('VITE_AGENTSLA_V2_ADDRESS must be a valid contract address.');
+  throw new Error('VITE_AGENTSLA_V3_ADDRESS must be a valid contract address.');
 }
 const CONTRACT_ADDRESS = configuredAddress;
-let v2Ready = false;
-const CANONICAL_SLA_ID = 'agentsla-v2-verified-002';
+let v3Ready = false;
+const CANONICAL_SLA_ID = 'agentsla-v3-wallet-001';
 const EXPLORER_BASE = 'https://explorer-studio.genlayer.com';
 const STUDIONET_CHAIN_ID_DECIMAL = 61999;
 const STUDIONET_CHAIN_ID_HEX = '0xf22f';
@@ -53,6 +57,25 @@ function parseGen(value) {
   const amount = BigInt(whole) * 10n ** 18n + BigInt(paddedFraction || '0');
   if (amount <= 0n) throw new Error('Reward must be greater than zero GEN.');
   return amount;
+}
+
+function finalizedWriteSucceeded(transaction) {
+  const statusName = transaction?.statusName || transaction?.status_name;
+  if (statusName !== TransactionStatus.FINALIZED) return false;
+
+  if (transaction?.txExecutionResultName) {
+    return transaction.txExecutionResultName === ExecutionResult.FINISHED_WITH_RETURN;
+  }
+
+  // genlayer-js 1.1.8 returns these snake_case fields in its simplified
+  // receipt. A majority can agree on an execution error, so require both
+  // consensus acceptance and the leader's successful return.
+  const leader = transaction?.consensus_data?.leader_receipt?.[0];
+  return (
+    transaction?.result_name === 'MAJORITY_AGREE' &&
+    leader?.execution_result === 'SUCCESS' &&
+    leader?.result?.status === 'return'
+  );
 }
 
 function setTxStatus(kind, title, detail, txHash = '') {
@@ -166,22 +189,21 @@ async function refreshCanonicalResult() {
     const result = await readSlaResult(CANONICAL_SLA_ID);
     const status = result?.status ?? 'UNKNOWN';
     const verdict = result?.verdict ?? 'UNKNOWN';
-    const score = Number(result?.score ?? 0);
     const settled = Boolean(result?.settled);
 
-    $('.verdict').textContent = verdict;
-    $('.score-pill').textContent = `${score} / 100`;
+    $('.verdict').textContent = verdict || status;
+    $('.score-pill').textContent = 'Categorical only';
     const resultRows = $$('.result-list dd');
     if (resultRows[2]) {
       resultRows[2].textContent = settled && status === 'PAID' ? 'Provider paid · verified' : status;
     }
 
-    liveResultMessage.textContent = `Live finalized state: ${status} · ${verdict} · ${score}/100`;
+    liveResultMessage.textContent = `Live finalized state: ${status} · ${verdict || 'no verdict yet'} · score not used`;
   } catch (error) {
     $('.verdict').textContent = 'UNVERIFIED';
     $('.score-pill').textContent = '—';
     $$('.result-list dd')[2].textContent = 'Live read unavailable';
-    liveResultMessage.textContent = `Live v2 demo could not be verified: ${error?.message || String(error)}`;
+    liveResultMessage.textContent = `Live v3 record could not be verified: ${error?.message || String(error)}`;
   } finally {
     refreshResultBtn.disabled = false;
     refreshResultBtn.textContent = 'Refresh on-chain result';
@@ -198,27 +220,24 @@ async function requireWallet() {
 }
 
 async function submitWrite(call, label) {
-  if (!v2Ready) {
-    setTxStatus('error', 'Upgrade pending', 'Write actions open after the v2 contract is deployed and verified.');
-    throw new Error('Deploy and configure the v2 contract first.');
+  if (!v3Ready) {
+    setTxStatus('error', 'Verification pending', 'Write actions open only after the v3 contract is verified.');
+    throw new Error('Deploy and configure the v3 contract first.');
   }
   await requireWallet();
   await ensureStudionet();
 
   let txId;
   try {
-    setTxStatus('working', 'Estimating transaction', `${label}: calculating the current GenLayer fee policy.`);
-
-    const estimate = await walletClient.estimateTransactionFeesForWrite(call);
-
-    setTxStatus('working', 'Awaiting wallet signature', `${label}: review the transaction in your wallet.`);
+    setTxStatus(
+      'working',
+      'Awaiting wallet signature',
+      `${label}: GenLayerJS will estimate gas through its supported write path, then request your signature.`,
+    );
 
     txId = await walletClient.writeContract({
       ...call,
-      fees: {
-        distribution: estimate.distribution,
-        feeValue: estimate.feeValue,
-      },
+      value: call.value ?? 0n,
     });
 
     setTxStatus(
@@ -228,11 +247,21 @@ async function submitWrite(call, label) {
       txId,
     );
 
-    const transaction = await walletClient.waitForFinalization({ hash: txId });
+    const transaction = await walletClient.waitForTransactionReceipt({
+      hash: txId,
+      status: TransactionStatus.FINALIZED,
+      interval: 3000,
+      retries: 100,
+    });
 
-    if (transaction?.txExecutionResultName !== 'FINISHED_WITH_RETURN') {
-      const statusName = transaction?.statusName || 'unknown status';
-      const executionName = transaction?.txExecutionResultName || 'unknown execution result';
+    if (!finalizedWriteSucceeded(transaction)) {
+      const leader = transaction?.consensus_data?.leader_receipt?.[0];
+      const statusName = transaction?.statusName || transaction?.status_name || 'unknown status';
+      const executionName =
+        transaction?.txExecutionResultName ||
+        leader?.execution_result ||
+        transaction?.result_name ||
+        'unknown execution result';
       throw new Error(`${statusName} / ${executionName}`);
     }
 
@@ -283,9 +312,13 @@ function wireForms() {
       $('#createTask').value.trim(),
       $('#createRequirements').value.trim(),
       $('#createEvidenceRequirements').value.trim(),
+      $('#createAuthorityOneUrl').value.trim(),
+      $('#createAuthorityOneHash').value.trim(),
+      $('#createAuthorityTwoUrl').value.trim(),
+      $('#createAuthorityTwoHash').value.trim(),
       Number($('#createAcceptance').value),
       Number($('#createSubmission').value),
-      Number($('#createPassing').value),
+      Number($('#createChallenge').value),
     ];
 
     let value;
@@ -333,6 +366,22 @@ function wireForms() {
         ],
       },
       'Submit work',
+    ).catch(() => {});
+  });
+
+  $('#counterForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    await submitWrite(
+      {
+        address: CONTRACT_ADDRESS,
+        functionName: 'submit_counter_evidence',
+        args: [
+          $('#counterId').value.trim(),
+          $('#counterEvidenceUrl').value.trim(),
+          $('#counterEvidenceHash').value.trim(),
+        ],
+      },
+      'Submit counter-evidence',
     ).catch(() => {});
   });
 
@@ -407,12 +456,12 @@ async function verifyDeployment() {
     const version = await publicClient.readContract({address: CONTRACT_ADDRESS,
       functionName: 'get_protocol_version', args: [],
       transactionHashVariant: TransactionHashVariant.LATEST_FINAL});
-    if (String(version) !== '2') throw new Error('Contract does not report protocol v2.');
-    v2Ready = true;
-    banner.textContent = `Agentsla v2 · ${CONTRACT_ADDRESS} · protected evidence retries enabled`;
+    if (String(version) !== '3') throw new Error('Contract does not report protocol v3.');
+    v3Ready = true;
+    banner.textContent = `Agentsla v3 · ${CONTRACT_ADDRESS} · two-sided evidence and categorical settlement enabled`;
     $$('.console-pane form button[type="submit"]').forEach(button => button.disabled = false);
   } catch (error) {
-    banner.textContent = `V2 verification failed; writes disabled: ${error?.message || String(error)}`;
+    banner.textContent = `V3 verification failed; writes disabled: ${error?.message || String(error)}`;
   }
 }
 verifyDeployment();

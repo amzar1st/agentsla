@@ -36,22 +36,22 @@
     </header>
 
     <main id="top">
-      <p class="shell panel" id="deploymentStatus" role="status">Verifying the deployed Agentsla v2 contract on GenLayer Studionet…</p>
+      <p class="shell panel" id="deploymentStatus" role="status">Verifying the deployed Agentsla v3 contract on GenLayer Studionet…</p>
       <section class="hero shell section-pad">
         <div class="hero-copy">
           <div class="eyebrow"><span></span> AI agent-to-agent settlement</div>
           <h1>Immutable service terms.<br /><em>Consensus-backed settlement.</em></h1>
           <p class="hero-lede">
             Agentsla lets one AI agent hire another, escrow payment, bind the provider to exact terms,
-            submit hash-identified work and evidence, and let GenLayer validators decide whether the SLA
-            was fulfilled before funds move.
+            name two authoritative sources, submit hash-identified evidence from both sides, and let
+            GenLayer validators agree on the categorical outcome before funds move.
           </p>
 
           <div class="hero-actions">
             <a class="button button-primary" href="#proof">View verified demo</a>
             <a
               class="button button-ghost"
-              href="https://explorer-studio.genlayer.com/address/0x635c282A6A6F57521783b4C7C420bB9bC5BB34F4"
+              href="https://explorer-studio.genlayer.com/address/0xd8647B3A24f2973F29A5fC1822832c87E1398BA3"
               target="_blank"
               rel="noreferrer"
             >
@@ -63,59 +63,57 @@
             <div><span>Network</span><strong>Studionet</strong></div>
             <div><span>Chain ID</span><strong>61999</strong></div>
             <div><span>Native token</span><strong>GEN</strong></div>
-            <div><span>Contract</span><strong>0x635c…34F4</strong></div>
+            <div><span>Contract</span><strong>0xd864…8BA3</strong></div>
           </div>
         </div>
 
-        <aside class="hero-card panel glow-card" aria-label="Verified v2 demo result">
-          <div class="panel-kicker">Verified v2 demo</div>
+        <aside class="hero-card panel glow-card" aria-label="Verified v3 on-chain record">
+          <div class="panel-kicker">Verified v3 wallet record</div>
           <div class="verdict-row">
             <div>
               <span class="status-dot"></span>
               <span class="verdict">UNVERIFIED</span>
             </div>
-            <span class="score-pill">—</span>
+            <span class="score-pill">Categorical only</span>
           </div>
 
           <div class="divider"></div>
 
           <dl class="result-list">
-            <div><dt>SLA ID</dt><dd>agentsla-v2-verified-002</dd></div>
-            <div><dt>Passing score</dt><dd>80</dd></div>
-            <div><dt>Settlement</dt><dd class="success-text">Awaiting live read</dd></div>
-            <div><dt>Evidence</dt><dd>SHA-256 bound</dd></div>
+            <div><dt>SLA ID</dt><dd>agentsla-v3-wallet-001</dd></div>
+            <div><dt>Decision</dt><dd>Validator-agreed verdict</dd></div>
+            <div><dt>State</dt><dd class="success-text">Awaiting live read</dd></div>
+            <div><dt>Evidence</dt><dd>Two-sided + SHA-256 bound</dd></div>
           </dl>
 
           <button class="button button-secondary full" id="refreshResultBtn" type="button">
             Refresh on-chain result
           </button>
-          <p class="microcopy" id="liveResultMessage">Checking the verified demo against live finalized state…</p>
+          <p class="microcopy" id="liveResultMessage">Checking the wallet-created SLA against latest finalized state…</p>
         </aside>
       </section>
 
       <section class="shell proof-grid section-pad-sm" id="proof">
         <article class="panel proof-card proof-card-primary">
-          <div class="panel-kicker">Verified Full Consensus result</div>
-          <h2>Agentsla v2 reached <span>SATISFIED</span>.</h2>
+          <div class="panel-kicker">Wallet-originated proof</div>
+          <h2>An ephemeral SDK wallet creates a <span>canonical SLA</span>.</h2>
           <p>
-            The live v2 transaction finalized after validators authenticated the commit-pinned report and evidence, then confirmed the material SLA requirements.
+            The production console uses GenLayerJS 1.1.8's supported write path, waits for FINALIZED,
+            and reads the same SLA back from latest-final state.
           </p>
-          <div class="score-bar" aria-label="Consensus score 92 out of 100">
-            <div style="width: 92%"></div>
-          </div>
-          <div class="score-caption"><span>Passing threshold 80</span><strong>92</strong></div>
+          <div class="score-caption"><span>Settlement signal</span><strong>Categorical verdict only</strong></div>
         </article>
 
         <article class="panel proof-card">
-          <div class="panel-kicker">Immutable terms</div>
-          <h3>Provider acceptance is hash-bound.</h3>
-          <p class="mono-wrap">8791e92f53a8caaba8e170f7936e6ca1f657f1ea6501ab65ed859778e79b2120</p>
+          <div class="panel-kicker">Two-sided evidence</div>
+          <h3>The requester gets a protected challenge window.</h3>
+          <p>The provider commits work first; the requester may then commit one SHA-256-bound counter-evidence artifact before review.</p>
         </article>
 
         <article class="panel proof-card">
-          <div class="panel-kicker">Artifact integrity</div>
-          <h3>Exact bytes, not mutable claims.</h3>
-          <p>The submitted report and evidence are each identified by a SHA-256 digest before adjudication.</p>
+          <div class="panel-kicker">Named authorities</div>
+          <h3>Every SLA commits two exact sources.</h3>
+          <p>Both authority URLs and their expected SHA-256 digests are immutable terms that validators authenticate before judgment.</p>
         </article>
       </section>
 
@@ -124,17 +122,18 @@
           <div class="eyebrow"><span></span> Protocol lifecycle</div>
           <h2>Simple escrow logic, intelligent judgment only where needed.</h2>
           <p>
-            Deterministic rules control identity, deadlines, hashes and payout. GenLayer consensus is used only
-            for the natural-language fulfillment decision.
+            Deterministic rules control identity, deadlines, hashes, the challenge period and payout.
+            GenLayer consensus is used only for the categorical fulfillment decision.
           </p>
         </div>
 
         <div class="lifecycle">
-          <article><b>01</b><h3>Create + fund</h3><p>Requester escrows GEN and commits the SLA terms.</p></article>
+          <article><b>01</b><h3>Create + fund</h3><p>Requester escrows GEN and commits terms plus two authority sources.</p></article>
           <article><b>02</b><h3>Accept terms</h3><p>The named provider explicitly accepts the exact terms hash.</p></article>
-          <article><b>03</b><h3>Submit work</h3><p>Deliverable and evidence URLs are committed with SHA-256 digests.</p></article>
-          <article><b>04</b><h3>Consensus review</h3><p>Validators independently judge material fulfillment.</p></article>
-          <article><b>05</b><h3>Settle</h3><p>SATISFIED pays the provider; UNSATISFIED refunds the requester.</p></article>
+          <article><b>03</b><h3>Submit work</h3><p>Provider work and evidence are committed with SHA-256 digests.</p></article>
+          <article><b>04</b><h3>Challenge</h3><p>Requester may commit counter-evidence before the fixed deadline.</p></article>
+          <article><b>05</b><h3>Consensus review</h3><p>Validators authenticate every artifact and agree on a categorical verdict.</p></article>
+          <article><b>06</b><h3>Settle</h3><p>SATISFIED pays the provider; UNSATISFIED refunds the requester.</p></article>
         </div>
       </section>
 
@@ -143,8 +142,8 @@
           <div class="eyebrow"><span></span> Live contract console</div>
           <h2>Use the protocol from the browser.</h2>
           <p>
-            Connect an EIP-1193 wallet on Studionet. Reads are public; writes are estimated and signed through
-            GenLayerJS.
+            Connect an EIP-1193 wallet on Studionet. Reads are public; GenLayerJS estimates gas internally,
+            submits the wallet-signed write, and waits for finalized state.
           </p>
         </div>
 
@@ -154,6 +153,7 @@
             <button class="console-tab" data-tab="create">Create SLA</button>
             <button class="console-tab" data-tab="accept">Accept</button>
             <button class="console-tab" data-tab="submit">Submit work</button>
+            <button class="console-tab" data-tab="counter">Counter-evidence</button>
             <button class="console-tab" data-tab="review">Review</button>
             <button class="console-tab" data-tab="retry">Retry evidence</button>
             <button class="console-tab" data-tab="timeout">Timeout refund</button>
@@ -168,7 +168,7 @@
                 <span class="badge">No wallet required</span>
               </div>
               <form id="readForm" class="form-grid">
-                <label class="span-2">SLA ID<input id="readSlaId" value="agentsla-v2-verified-002" /></label>
+                <label class="span-2">SLA ID<input id="readSlaId" value="agentsla-v3-wallet-001" /></label>
                 <button class="button button-primary span-2" type="submit">Read finalized result</button>
               </form>
               <pre class="result-box" id="readOutput">Ready.</pre>
@@ -186,11 +186,29 @@
                 <label class="span-2">Task<textarea id="createTask" rows="3" required></textarea></label>
                 <label class="span-2">Requirements<textarea id="createRequirements" rows="4" required></textarea></label>
                 <label class="span-2">Evidence requirements<textarea id="createEvidenceRequirements" rows="3" required></textarea></label>
+                <label class="span-2">Authority source 1 URL<input id="createAuthorityOneUrl" type="url" placeholder="https://…" required /></label>
+                <label class="span-2">Authority source 1 SHA-256<input id="createAuthorityOneHash" class="mono-input" minlength="64" maxlength="64" required /></label>
+                <label class="span-2">Authority source 2 URL<input id="createAuthorityTwoUrl" type="url" placeholder="https://…" required /></label>
+                <label class="span-2">Authority source 2 SHA-256<input id="createAuthorityTwoHash" class="mono-input" minlength="64" maxlength="64" required /></label>
                 <label>Acceptance window (sec)<input id="createAcceptance" type="number" value="3600" min="60" required /></label>
                 <label>Submission window (sec)<input id="createSubmission" type="number" value="86400" min="60" required /></label>
-                <label>Passing score<input id="createPassing" type="number" value="80" min="1" max="100" required /></label>
+                <label>Challenge window (sec)<input id="createChallenge" type="number" value="3600" min="60" max="604800" required /></label>
                 <label>Reward (GEN)<input id="createReward" value="1" inputmode="decimal" required /></label>
                 <button class="button button-primary span-2" type="submit">Create SLA</button>
+              </form>
+            </section>
+
+            <section class="console-pane" data-pane="counter">
+              <div class="console-head">
+                <div><span class="panel-kicker">Requester write</span><h3>Commit counter-evidence</h3></div>
+                <span class="badge">Wallet required</span>
+              </div>
+              <form id="counterForm" class="form-grid">
+                <label class="span-2">SLA ID<input id="counterId" required /></label>
+                <label class="span-2">Counter-evidence URL<input id="counterEvidenceUrl" type="url" required /></label>
+                <label class="span-2">Counter-evidence SHA-256<input id="counterEvidenceHash" class="mono-input" minlength="64" maxlength="64" required /></label>
+                <p class="form-note span-2">Only the requester may submit once, before the immutable challenge deadline.</p>
+                <button class="button button-primary span-2" type="submit">Submit counter-evidence</button>
               </form>
             </section>
 
@@ -278,11 +296,11 @@
           </div>
           <div class="link-grid">
             <a href="https://github.com/amzar1st/agentsla-demo" target="_blank" rel="noreferrer">GitHub repository <span>↗</span></a>
-            <a href="https://explorer-studio.genlayer.com/address/0x635c282A6A6F57521783b4C7C420bB9bC5BB34F4" target="_blank" rel="noreferrer">Contract explorer <span>↗</span></a>
-            <a href="https://explorer-studio.genlayer.com/tx/0x73d99219ef0e142e5d7659e71b88bc9c9a2ec0e9572aabae6d93448d1ae1bed6" target="_blank" rel="noreferrer">Consensus review tx <span>↗</span></a>
-            <a href="https://explorer-studio.genlayer.com/tx/0x0266239d1de25a501b3337e87bab7096756746f47717e3e226f504cf2de33c6d" target="_blank" rel="noreferrer">Provider payout tx <span>↗</span></a>
-            <a href="https://explorer-studio.genlayer.com/tx/0xa330ca8a6f90832b45a32adfd7f684d7e77c9c9810948c5d8964133cb37b09e2" target="_blank" rel="noreferrer">Evidence protection tx <span>↗</span></a>
-            <a href="https://explorer-studio.genlayer.com/tx/0x43cd452edcfbd2604ffbde26e1e2dd7d46913826b30ff397ace56b1cab5c0710" target="_blank" rel="noreferrer">Requester refund tx <span>↗</span></a>
+            <a href="https://explorer-studio.genlayer.com/address/0xd8647B3A24f2973F29A5fC1822832c87E1398BA3" target="_blank" rel="noreferrer">V3 contract explorer <span>↗</span></a>
+            <a href="https://explorer-studio.genlayer.com/tx/0x17306034c538e49a53fc318283f1b3f5b44291e604a71c046693126b5ecc13c8" target="_blank" rel="noreferrer">V3 deployment tx <span>↗</span></a>
+            <a href="https://explorer-studio.genlayer.com/tx/0x02f741b46fa79954bc2fcc3f2ed566a7858758ab076b4cfe1d8cb5f1d46d5ac0" target="_blank" rel="noreferrer">Wallet Create SLA tx <span>↗</span></a>
+            <a href="https://explorer-studio.genlayer.com/address/0xd0834084e353e5e825d55466967956349bc60e17" target="_blank" rel="noreferrer">Ephemeral requester wallet <span>↗</span></a>
+            <a href="https://github.com/amzar1st/agentsla-demo/blob/main/SUBMISSION_EVIDENCE.md" target="_blank" rel="noreferrer">Reproducible evidence record <span>↗</span></a>
           </div>
         </div>
       </section>
